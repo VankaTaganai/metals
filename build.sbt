@@ -495,7 +495,7 @@ lazy val metals = project
       "scala3" -> V.scala3,
     ),
   )
-  .dependsOn(mtags)
+  .dependsOn(mtags, `mtags-java`)
   .enablePlugins(BuildInfoPlugin)
 
 lazy val `sbt-metals` = project
@@ -609,7 +609,8 @@ def publishAllMtags(
 def publishBinaryMtags =
   (interfaces / publishLocal)
     .dependsOn(
-      publishAllMtags(V.quickPublishScalaVersions)
+      `mtags-java` / publishLocal,
+      publishAllMtags(V.quickPublishScalaVersions),
     )
 
 lazy val mtest = project
@@ -652,6 +653,14 @@ lazy val cross = project
     crossScalaVersions := V.nonDeprecatedScalaVersions,
   )
   .dependsOn(mtest)
+
+lazy val javapc = project
+  .in(file("tests/javapc"))
+  .settings(
+    testSettings,
+    sharedSettings,
+  )
+  .dependsOn(mtest, mtagsShared)
 
 def isInTestShard(name: String, logger: Logger): Boolean = {
   val groupIndex = TestGroups.testGroups.indexWhere(group => group(name))
