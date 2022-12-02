@@ -104,6 +104,7 @@ def configureMtagsScalaVersionDynamically(
     List(
       mtest / scalaVersion := scalaV,
       mtags / scalaVersion := scalaV,
+      `mtags-core` / scalaVersion := scalaV,
       cross / scalaVersion := scalaV,
     )
   val extracted = Project.extract(state)
@@ -260,25 +261,20 @@ def multiScalaDirectories(root: File, scalaVersion: String) = {
   result.toList
 }
 
-val mtagsSettings = List(
+lazy val mtagsCoreSettings = List(
   crossScalaVersions := {
     V.supportedScalaVersions ++ V.nightlyScala3Versions
   },
   crossTarget := target.value / s"scala-${scalaVersion.value}",
   crossVersion := CrossVersion.full,
   Compile / unmanagedSourceDirectories ++= multiScalaDirectories(
-    (ThisBuild / baseDirectory).value / "mtags",
+    (ThisBuild / baseDirectory).value / "mtags-core",
     scalaVersion.value,
   ),
   // @note needed to deal with issues with dottyDoc
   Compile / doc / sources := Seq.empty,
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %% "geny" % V.genyVersion,
-    "com.thoughtworks.qdox" % "qdox" % V.qdox, // for java mtags
-    "org.scala-lang.modules" %% "scala-java8-compat" % V.java8Compat,
-    "org.jsoup" % "jsoup" % V.jsoup, // for extracting HTML from javadocs
-    // for ivy completions
-    "io.get-coursier" % "interface" % V.coursierInterfaces,
+    "com.lihaoyi" %% "geny" % V.genyVersion
   ),
   libraryDependencies ++= crossSetting(
     scalaVersion.value,
@@ -302,6 +298,20 @@ val mtagsSettings = List(
           "sourcecode_2.13",
         ), // avoid 2.13 and 3 on the classpath since it comes in via pprint
     ),
+  ),
+)
+
+val mtagsSettings = mtagsCoreSettings ++ List(
+  Compile / unmanagedSourceDirectories ++= multiScalaDirectories(
+    (ThisBuild / baseDirectory).value / "mtags",
+    scalaVersion.value,
+  ),
+  libraryDependencies ++= Seq(
+    "com.thoughtworks.qdox" % "qdox" % V.qdox, // for java mtags
+    "org.scala-lang.modules" %% "scala-java8-compat" % V.java8Compat,
+    "org.jsoup" % "jsoup" % V.jsoup, // for extracting HTML from javadocs
+    // for ivy completions
+    "io.get-coursier" % "interface" % V.coursierInterfaces,
   ),
   libraryDependencies ++= List("org.lz4" % "lz4-java" % "1.8.0"),
   libraryDependencies ++= {
@@ -336,6 +346,7 @@ lazy val mtags3 = project
     sharedSettings,
     mtagsSettings,
     Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "mtags" / "src" / "main" / "scala",
+    Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "mtags-core" / "src" / "main" / "scala",
     moduleName := "mtags3",
     scalaVersion := V.scala3,
     target := (ThisBuild / baseDirectory).value / "mtags" / "target" / "target3",
@@ -353,7 +364,105 @@ lazy val mtags = project
     mtagsSettings,
     moduleName := "mtags",
   )
+  .dependsOn(interfaces, `mtags-core`)
+  .enablePlugins(BuildInfoPlugin)
+
+lazy val `mtags-core` = project
+  .settings(
+    sharedSettings,
+    moduleName := "mtags-core",
+    mtagsCoreSettings,
+  )
   .dependsOn(interfaces)
+
+def multiJavaDirectories(root: File, javaVersion: String) = {
+  val base = root / "src" / "main"
+  val result = mutable.ListBuffer.empty[File]
+  if (javaVersion == "9") {
+    result += base / s"java-8"
+  } else if (javaVersion.toInt > 17) {
+    result += base / s"java-17"
+  } else {
+    result += base / s"java-$javaVersion"
+  }
+  result.toList
+}
+
+lazy val currentJavaHome = settingKey[File]("current java home")
+lazy val currentJavaVersion = settingKey[String]("current java version")
+
+lazy val `mtags-java` = project
+  .settings(
+    sharedSettings,
+    moduleName := "mtags-java",
+    scalaVersion := V.scala213,
+    currentJavaHome := file(System.getProperty("java.home")),
+    currentJavaVersion := {
+      def fromReleaseFile: Option[String] = {
+        import java.{util => ju}
+        import scala.io.Source
+        import scala.util.control.NonFatal
+
+        val releaseFile = currentJavaHome.value / "release"
+        if (releaseFile.exists) {
+          val props = new ju.Properties
+          props.load(Source.fromFile(releaseFile).bufferedReader())
+          try {
+            parse(
+              props
+                .getProperty("JAVA_VERSION")
+                .stripPrefix("\"")
+                .stripSuffix("\"")
+            )
+          } catch {
+            case NonFatal(e) =>
+              None
+          }
+        } else None
+      }
+
+      def jdk8Fallback: Option[String] = {
+        val rtJar = currentJavaHome.value / "jre" / "lib" / "rt.jar"
+        val rt2Jar = currentJavaHome.value / "lib" / "rt.jar"
+        if (rtJar.exists || rt2Jar.exists) {
+          Some("8")
+        } else None
+      }
+
+      def parse(v: String): Option[String] = {
+        val numbers = v
+          .split('-')
+          .head
+          .split('.')
+          .toList
+          .take(2)
+
+        numbers match {
+          case "1" :: minor :: _ =>
+            Some(minor)
+          case single :: _ =>
+            Some(single)
+          case _ => None
+        }
+      }
+
+      fromReleaseFile.orElse(jdk8Fallback).get
+    },
+    Compile / unmanagedJars ++= {
+      if (currentJavaVersion.value == "8")
+        Seq(
+          file(
+            currentJavaHome.value.getPath.stripSuffix("jre") + "lib/tools.jar"
+          )
+        )
+      else Nil
+    },
+    buildInfoPackage := "scala.meta.internal.mtags",
+    buildInfoKeys := Seq[BuildInfoKey](
+      "scalaCompilerVersion" -> scalaVersion.value
+    ),
+  )
+  .dependsOn(interfaces, `mtags-core`)
   .enablePlugins(BuildInfoPlugin)
 
 lazy val metals = project
@@ -477,7 +586,7 @@ lazy val metals = project
       "scala3" -> V.scala3,
     ),
   )
-  .dependsOn(mtags)
+  .dependsOn(mtags, `mtags-java`)
   .enablePlugins(BuildInfoPlugin)
 
 lazy val `sbt-metals` = project
@@ -552,6 +661,7 @@ def runMtagsPublishLocal(
     .appendWithSession(
       List(
         mtags / scalaVersion := scalaV,
+        `mtags-core` / scalaVersion := scalaV,
         ThisBuild / version := projectV,
         ThisBuild / useSuperShell := false,
       ),
@@ -629,6 +739,14 @@ lazy val cross = project
     crossScalaVersions := V.nonDeprecatedScalaVersions,
   )
   .dependsOn(mtest, mtags)
+
+lazy val javapc = project
+  .in(file("tests/javapc"))
+  .settings(
+    testSettings,
+    sharedSettings,
+  )
+  .dependsOn(mtest, `mtags-java`)
 
 def isInTestShard(name: String, logger: Logger): Boolean = {
   val groupIndex = TestGroups.testGroups.indexWhere(group => group(name))

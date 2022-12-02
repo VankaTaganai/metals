@@ -34,6 +34,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
+          java-package: 'jdk'
           java-version: ${{ matrix.java }}
           cache: 'sbt'
       - name: Run unit tests
@@ -96,6 +97,10 @@ jobs:
           - type: cross
             command: sbt +cross/test
             name: Scala cross tests
+            os: ubuntu-latest
+          - type: mtags-java
+            command: sbt javapc/test
+            name: Scala javapc tests
             os: ubuntu-latest
           - type: cross-latest-nightly
             command: sbt cross-test-latest-nightly
