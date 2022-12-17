@@ -36,7 +36,7 @@ class JavaPresentationCompiler extends PresentationCompiler {
   override def complete(
       params: OffsetParams
   ): CompletableFuture[CompletionList] =
-    CompletableFuture.completedFuture(
+    CompletableFuture.completedFuture( // fixme
       new JavaCompletionProvider(params).completions()
     )
 
@@ -50,7 +50,11 @@ class JavaPresentationCompiler extends PresentationCompiler {
   ): CompletableFuture[SignatureHelp] = ???
 
   override def hover(params: OffsetParams): CompletableFuture[Optional[Hover]] =
-    ???
+    CompletableFuture.completedFuture(
+      Optional.ofNullable(
+        new JavaHoverProvider(params).hover().orNull
+      )
+    )
 
   override def rename(
       params: OffsetParams,

@@ -8,13 +8,29 @@ import org.eclipse.lsp4j.Hover
 
 object TestHovers extends TestHovers
 trait TestHovers {
-  implicit class XtensionString(string: String) {
+  implicit class XtensionString(string: String) { // todo: General Code
     def hover: String = {
       string.trim.linesIterator.toList match {
         case List(symbolSignature) =>
           HoverMarkup("", symbolSignature, "")
         case List(expressionType, symbolSignature) =>
           HoverMarkup(
+            expressionType,
+            symbolSignature,
+            "",
+            forceExpressionType = true,
+          )
+        case _ =>
+          string
+      }
+    }
+
+    def javaHover: String = {
+      string.trim.linesIterator.toList match {
+        case List(symbolSignature) =>
+          HoverMarkup.javaHoverMarkup("", symbolSignature, "")
+        case List(expressionType, symbolSignature) =>
+          HoverMarkup.javaHoverMarkup(
             expressionType,
             symbolSignature,
             "",

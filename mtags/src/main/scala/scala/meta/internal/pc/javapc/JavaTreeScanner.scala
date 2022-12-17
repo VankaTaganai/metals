@@ -12,7 +12,10 @@ import com.sun.source.tree.{
 }
 import com.sun.source.util.{JavacTask, TreePath, TreePathScanner, Trees}
 
-class JavaTreeScanner(task: JavacTask, var root: CompilationUnitTree)
+class JavaTreeScanner(
+    task: JavacTask,
+    var root: CompilationUnitTree
+) // todo: range
     extends TreePathScanner[TreePath, Int] {
   override def visitCompilationUnit(
       t: CompilationUnitTree,
