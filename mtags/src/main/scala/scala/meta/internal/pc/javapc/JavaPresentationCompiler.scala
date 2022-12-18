@@ -33,11 +33,13 @@ import scala.meta.pc.{
 
 class JavaPresentationCompiler extends PresentationCompiler {
 
+  private val javaCompiler = new JavaMetalsGlobal
+
   override def complete(
       params: OffsetParams
   ): CompletableFuture[CompletionList] =
     CompletableFuture.completedFuture( // fixme
-      new JavaCompletionProvider(params).completions()
+      new JavaCompletionProvider(javaCompiler, params).completions()
     )
 
   override def completionItemResolve(
@@ -52,7 +54,7 @@ class JavaPresentationCompiler extends PresentationCompiler {
   override def hover(params: OffsetParams): CompletableFuture[Optional[Hover]] =
     CompletableFuture.completedFuture(
       Optional.ofNullable(
-        new JavaHoverProvider(params).hover().orNull
+        new JavaHoverProvider(javaCompiler, params).hover().orNull
       )
     )
 

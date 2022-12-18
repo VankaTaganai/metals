@@ -7,8 +7,7 @@ import com.sun.source.tree.{
   IdentifierTree,
   ImportTree,
   MemberReferenceTree,
-  MemberSelectTree,
-  Tree
+  MemberSelectTree
 }
 import com.sun.source.util.{JavacTask, TreePath, TreePathScanner, Trees}
 

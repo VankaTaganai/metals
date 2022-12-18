@@ -3,10 +3,7 @@ package scala.meta.internal.pc.javapc
 import com.sun.source.util.{JavacTask, Trees}
 import org.eclipse.lsp4j.Hover
 
-import scala.jdk.CollectionConverters._
-import java.util.ServiceLoader
-import javax.lang.model.element.{Element, ExecutableElement, VariableElement}
-import javax.tools.JavaCompiler
+import javax.lang.model.element.{Element, VariableElement}
 import scala.meta.internal.mtags.MtagsEnrichments.{
   XtensionOffsetParams,
   XtensionRangeParams,
@@ -15,10 +12,10 @@ import scala.meta.internal.mtags.MtagsEnrichments.{
 import scala.meta.internal.pc.HoverMarkup
 import scala.meta.pc.{OffsetParams, RangeParams}
 
-class JavaHoverProvider(params: OffsetParams) {
-  // TODO: move compiler to compiler wrapper
-  private val COMPILER: JavaCompiler =
-    ServiceLoader.load(classOf[JavaCompiler]).iterator.next
+class JavaHoverProvider(
+    compiler: JavaMetalsGlobal,
+    params: OffsetParams
+) {
 
   def hover(): Option[Hover] = params match {
     case range: RangeParams => range.trimWhitespaceInRange.flatMap(hoverOffset)
@@ -27,25 +24,10 @@ class JavaHoverProvider(params: OffsetParams) {
   }
 
   def hoverOffset(params: OffsetParams): Option[Hover] = {
-    val javaFileObject = SourceJavaFileObject.make(params.text())
+    val task: JavacTask = compiler.compilationTask(params.text())
+    val node = compiler.compilerTreeNode(task, params.offset())
 
-    val task: JavacTask = COMPILER
-      .getTask(
-        null,
-        null,
-        null,
-        null,
-        null,
-        List(javaFileObject).asJava
-      )
-      .asInstanceOf[JavacTask]
-
-    val elems = task.parse()
-    task.analyze()
-    val root = elems.iterator().next()
-
-    val curNode = new JavaTreeScanner(task, root).scan(root, params.offset())
-    val element = Trees.instance(task).getElement(curNode)
+    val element = Trees.instance(task).getElement(node)
 
     hoverType(element)
   }

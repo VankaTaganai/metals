@@ -5,8 +5,6 @@ import com.sun.source.util.{JavacTask, TreePath}
 import org.eclipse.lsp4j.{CompletionItem, CompletionList}
 
 import scala.jdk.CollectionConverters._
-import java.util.ServiceLoader
-import javax.tools.JavaCompiler
 import scala.meta.pc.OffsetParams
 import com.sun.source.tree.Tree.Kind._
 
@@ -14,34 +12,16 @@ import javax.lang.model.`type`.{ArrayType, DeclaredType, TypeVariable}
 import javax.lang.model.element.TypeElement
 
 class JavaCompletionProvider(
+    compiler: JavaMetalsGlobal,
     params: OffsetParams
 ) {
-  // TODO: move compiler to compiler wrapper
-  private val COMPILER: JavaCompiler =
-    ServiceLoader.load(classOf[JavaCompiler]).iterator.next
 
   def completions(): CompletionList = {
-    val javaFileObject = SourceJavaFileObject.make(params.text())
+    val task: JavacTask = compiler.compilationTask(params.text())
+    val node = compiler.compilerTreeNode(task, params.offset())
 
-    val task: JavacTask = COMPILER
-      .getTask(
-        null,
-        null,
-        null,
-        null,
-        null,
-        List(javaFileObject).asJava
-      )
-      .asInstanceOf[JavacTask]
-
-    val elems = task.parse()
-    task.analyze()
-    val root = elems.iterator().next()
-
-    val curNode = new JavaTreeScanner(task, root).scan(root, params.offset())
-
-    curNode.getLeaf.getKind match {
-      case MEMBER_SELECT => completeMemberSelect(task, curNode)
+    node.getLeaf.getKind match {
+      case MEMBER_SELECT => completeMemberSelect(task, node)
       case _ => ??? // TODO: Handle all options
     }
   }
