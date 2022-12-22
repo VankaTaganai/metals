@@ -18,7 +18,8 @@ class JavaCompletionProvider(
 
   def completions(): CompletionList = {
     val task: JavacTask = compiler.compilationTask(params.text())
-    val node = compiler.compilerTreeNode(task, params.offset())
+    val scanner = compiler.scanner(task)
+    val node = compiler.compilerTreeNode(scanner, params.offset())
 
     node.getLeaf.getKind match {
       case MEMBER_SELECT => completeMemberSelect(task, node)

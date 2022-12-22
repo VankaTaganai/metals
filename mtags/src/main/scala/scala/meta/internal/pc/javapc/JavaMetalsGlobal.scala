@@ -1,5 +1,6 @@
 package scala.meta.internal.pc.javapc
 
+import com.sun.source.tree.Tree
 import com.sun.source.util.{JavacTask, TreePath}
 
 import scala.jdk.CollectionConverters._
@@ -26,12 +27,25 @@ class JavaMetalsGlobal {
       .asInstanceOf[JavacTask]
   }
 
-  def compilerTreeNode(task: JavacTask, offset: Int): TreePath = {
+  var lastVisitedParentTrees: List[Tree] = Nil
+
+  def scanner(task: JavacTask): JavaTreeScanner = {
     val elems = task.parse()
     task.analyze()
     val root = elems.iterator().next()
 
-    new JavaTreeScanner(task, root).scan(root, offset)
+    new JavaTreeScanner(task, root)
+  }
+
+  def compilerTreeNode(scanner: JavaTreeScanner, offset: Int): TreePath = {
+    val path = scanner.scan(scanner.root, offset)
+    lastVisitedParentTrees = scanner.lastVisitedParentTrees
+
+    path
+  }
+
+  def getEndPosition(task: JavacTask, node: Tree): Long = {
+    new
   }
 
 }

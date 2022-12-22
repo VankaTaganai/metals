@@ -7,15 +7,22 @@ import com.sun.source.tree.{
   IdentifierTree,
   ImportTree,
   MemberReferenceTree,
-  MemberSelectTree
+  MemberSelectTree,
+  PackageTree,
+  Tree
 }
 import com.sun.source.util.{JavacTask, TreePath, TreePathScanner, Trees}
+
+import scala.collection.immutable.Nil
 
 class JavaTreeScanner(
     task: JavacTask,
     var root: CompilationUnitTree
 ) // todo: range
     extends TreePathScanner[TreePath, Int] {
+
+  var lastVisitedParentTrees: List[Tree] = Nil
+
   override def visitCompilationUnit(
       t: CompilationUnitTree,
       find: Int
@@ -30,6 +37,7 @@ class JavaTreeScanner(
     val end = pos.getEndPosition(root, node)
 
     if (start <= p && p <= end) {
+      lastVisitedParentTrees = node :: lastVisitedParentTrees
       getCurrentPath
     } else {
       super.visitIdentifier(node, p)
@@ -42,6 +50,7 @@ class JavaTreeScanner(
     val end = pos.getEndPosition(root, node)
 
     if (start <= p && p <= end) {
+      lastVisitedParentTrees = node :: lastVisitedParentTrees
       getCurrentPath
     } else {
       super.visitMemberSelect(node, p)
@@ -57,6 +66,7 @@ class JavaTreeScanner(
     val end = pos.getEndPosition(root, node)
 
     if (start <= p && p <= end) {
+      lastVisitedParentTrees = node :: lastVisitedParentTrees
       getCurrentPath
     } else {
       super.visitMemberReference(node, p)
@@ -69,6 +79,7 @@ class JavaTreeScanner(
     val end = pos.getEndPosition(root, node.getExpressions.get(0))
 
     if (start <= p && p <= end) {
+      lastVisitedParentTrees = node :: lastVisitedParentTrees
       getCurrentPath.getParentPath
     } else {
       super.visitCase(node, p)
@@ -81,6 +92,7 @@ class JavaTreeScanner(
     val end = pos.getEndPosition(root, node.getQualifiedIdentifier)
 
     if (start <= p && p <= end) {
+      lastVisitedParentTrees = node :: lastVisitedParentTrees
       getCurrentPath
     } else {
       super.visitImport(node, p)
@@ -90,8 +102,27 @@ class JavaTreeScanner(
   override def visitErroneous(node: ErroneousTree, p: Int): TreePath =
     scan(node.getErrorTrees, p)
 
+  override def visitPackage(node: PackageTree, p: Int): TreePath = {
+    val pos = Trees.instance(task).getSourcePositions
+    val start = pos.getStartPosition(root, node.getPackageName)
+    val end = pos.getEndPosition(root, node.getPackageName)
+
+    if (start <= p && p <= end) {
+      lastVisitedParentTrees = node :: lastVisitedParentTrees
+      getCurrentPath
+    } else {
+      super.visitPackage(node, p)
+    }
+  }
+
   override def reduce(a: TreePath, b: TreePath): TreePath = {
     if (a != null) return a
     b
+  }
+
+  def getEndPosition(node: Tree): Long = {
+    val pos = Trees.instance(task).getSourcePositions
+
+    pos.getEndPosition(root, node)
   }
 }
