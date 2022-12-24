@@ -3,9 +3,14 @@ package scala.meta.internal.pc.javapc
 import com.sun.source.tree.Tree
 import com.sun.source.util.{JavacTask, TreePath}
 
+import java.io.File
+import java.net.URI
+import java.nio.file.{FileSystem, FileSystems, Files}
 import scala.jdk.CollectionConverters._
 import java.util.ServiceLoader
 import javax.tools.JavaCompiler
+import scala.collection.mutable
+import scala.util.Using
 
 class JavaMetalsGlobal {
 
@@ -45,7 +50,43 @@ class JavaMetalsGlobal {
   }
 
   def getEndPosition(task: JavacTask, node: Tree): Long = {
-    new
+    0
+  }
+
+  def allQualifiedNames(): List[String] = {
+    jdkTopClasses
+  }
+
+  def classPathClasses(): List[String] = {
+    Nil
+  }
+
+  private val JAVA_MODULES = List("java.base")
+
+  val jdkTopClasses: List[String] = {
+
+    val classes = mutable.Set[String]()
+    val fs: FileSystem = FileSystems.getFileSystem(URI.create("jrt:/"))
+
+    JAVA_MODULES.foreach { module =>
+      val modulePath = fs.getPath(String.format("/modules/%s/", module))
+
+      Using(Files.walk(modulePath)) { stream =>
+        val it = stream.iterator()
+
+        while (it.hasNext) {
+          val classFile = it.next
+          val relative = modulePath.relativize(classFile).toString
+          if (relative.endsWith(".class") && !relative.contains("$")) {
+            val trim = relative.substring(0, relative.length - ".class".length)
+            val qualifiedName = trim.replace(File.separatorChar, '.')
+            classes.add(qualifiedName)
+          }
+        }
+      }
+    }
+
+    classes.toList
   }
 
 }
