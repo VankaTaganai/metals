@@ -36,8 +36,8 @@ class JavaTreeScanner(
     val start = pos.getStartPosition(root, node)
     val end = pos.getEndPosition(root, node)
 
+    lastVisitedParentTrees = node :: lastVisitedParentTrees
     if (start <= p && p <= end) {
-      lastVisitedParentTrees = node :: lastVisitedParentTrees
       getCurrentPath
     } else {
       super.visitIdentifier(node, p)
@@ -49,8 +49,8 @@ class JavaTreeScanner(
     val start = pos.getEndPosition(root, node.getExpression) + 1
     val end = pos.getEndPosition(root, node)
 
+    lastVisitedParentTrees = node :: lastVisitedParentTrees
     if (start <= p && p <= end) {
-      lastVisitedParentTrees = node :: lastVisitedParentTrees
       getCurrentPath
     } else {
       super.visitMemberSelect(node, p)
@@ -65,8 +65,8 @@ class JavaTreeScanner(
     val start = pos.getEndPosition(root, node.getQualifierExpression) + 2
     val end = pos.getEndPosition(root, node)
 
+    lastVisitedParentTrees = node :: lastVisitedParentTrees
     if (start <= p && p <= end) {
-      lastVisitedParentTrees = node :: lastVisitedParentTrees
       getCurrentPath
     } else {
       super.visitMemberReference(node, p)
@@ -78,8 +78,8 @@ class JavaTreeScanner(
     val start = pos.getStartPosition(root, node) + "case".length
     val end = pos.getEndPosition(root, node.getExpressions.get(0))
 
+    lastVisitedParentTrees = node :: lastVisitedParentTrees
     if (start <= p && p <= end) {
-      lastVisitedParentTrees = node :: lastVisitedParentTrees
       getCurrentPath.getParentPath
     } else {
       super.visitCase(node, p)
@@ -91,8 +91,8 @@ class JavaTreeScanner(
     val start = pos.getStartPosition(root, node.getQualifiedIdentifier)
     val end = pos.getEndPosition(root, node.getQualifiedIdentifier)
 
+    lastVisitedParentTrees = node :: lastVisitedParentTrees
     if (start <= p && p <= end) {
-      lastVisitedParentTrees = node :: lastVisitedParentTrees
       getCurrentPath
     } else {
       super.visitImport(node, p)
@@ -107,8 +107,8 @@ class JavaTreeScanner(
     val start = pos.getStartPosition(root, node.getPackageName)
     val end = pos.getEndPosition(root, node.getPackageName)
 
+    lastVisitedParentTrees = node :: lastVisitedParentTrees
     if (start <= p && p <= end) {
-      lastVisitedParentTrees = node :: lastVisitedParentTrees
       getCurrentPath
     } else {
       super.visitPackage(node, p)

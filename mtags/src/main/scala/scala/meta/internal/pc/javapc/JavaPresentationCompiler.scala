@@ -31,6 +31,8 @@ import scala.meta.pc.{
   VirtualFileParams
 }
 
+import scala.jdk.CollectionConverters._
+
 class JavaPresentationCompiler extends PresentationCompiler {
 
   private val javaCompiler = new JavaMetalsGlobal
@@ -84,7 +86,10 @@ class JavaPresentationCompiler extends PresentationCompiler {
       name: String,
       params: OffsetParams,
       isExtension: lang.Boolean
-  ): CompletableFuture[util.List[AutoImportsResult]] = ???
+  ): CompletableFuture[util.List[AutoImportsResult]] =
+    CompletableFuture.completedFuture(
+      new JavaAutoImportsProvider(javaCompiler, params).autoImports().asJava
+    )
 
   override def implementAbstractMembers(
       params: OffsetParams

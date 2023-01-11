@@ -2,13 +2,16 @@ package tests.pc.javapc
 
 import tests.BaseSuite
 
+import java.nio.file.Files
 import scala.meta.internal.pc.javapc.JavaPresentationCompiler
+import scala.meta.io.AbsolutePath
 import scala.meta.pc.PresentationCompiler
 
 abstract class BaseJavaPCSuite extends BaseSuite { // todo: General Logic
   protected lazy val presentationCompiler: PresentationCompiler = {
     new JavaPresentationCompiler
   }
+  val tmp: AbsolutePath = AbsolutePath(Files.createTempDirectory("java.metals"))
 
   def params(code: String, filename: String = "test.java"): (String, Int) = {
     val code2 = code.replace("@@", "")

@@ -9,8 +9,7 @@ import scala.meta.pc.{AutoImportsResult, OffsetParams}
 import org.eclipse.{lsp4j => l}
 
 import scala.jdk.CollectionConverters.SeqHasAsJava
-import scala.reflect.internal.util.Position
-import scala.tools.nsc.MainBench.theCompiler.newSourceFile
+import scala.reflect.internal.util.{BatchSourceFile, Position}
 
 final class JavaAutoImportsProvider(
     compiler: JavaMetalsGlobal,
@@ -35,7 +34,7 @@ final class JavaAutoImportsProvider(
 
           val editPosition = Position
             .offset(
-              newSourceFile(params.text(), params.uri().toString),
+              new BatchSourceFile(params.text(), params.uri().toString),
               pos.offset
             )
             .toLsp
@@ -45,8 +44,6 @@ final class JavaAutoImportsProvider(
             (new TextEdit(editPosition, s"import $qName") :: Nil).asJava
           )
       }
-
-    println("identifier: " + identifier)
 
     autoImports
   }
