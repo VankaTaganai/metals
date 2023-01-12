@@ -23,9 +23,13 @@ class JavaCompletionProvider(
       CursorPosition(params.offset(), params.offset(), params.offset())
     val node = compiler.compilerTreeNode(scanner, position)
 
-    node.getLeaf.getKind match {
-      case MEMBER_SELECT => completeMemberSelect(task, node)
-      case _ => ??? // TODO: Handle all options
+    node match {
+      case Some(n) =>
+        n.getLeaf.getKind match {
+          case MEMBER_SELECT => completeMemberSelect(task, n)
+          case _ => ??? // TODO: Handle all options
+        }
+      case None => new CompletionList()
     }
   }
 

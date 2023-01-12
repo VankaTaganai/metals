@@ -3,7 +3,7 @@ package scala.meta.internal.pc.javapc
 import com.sun.source.util.{JavacTask, Trees}
 import org.eclipse.lsp4j.Hover
 
-import javax.lang.model.element.{Element, VariableElement}
+import javax.lang.model.element.{Element, TypeElement, VariableElement}
 import scala.meta.internal.mtags.MtagsEnrichments.{
   XtensionOffsetParams,
   XtensionRangeParams,
@@ -33,15 +33,32 @@ class JavaHoverProvider(
     }
 
     val node = compiler.compilerTreeNode(scanner, position)
-    val element = Trees.instance(task).getElement(node)
 
-    hoverType(element)
+    for {
+      n <- node
+      element = Trees.instance(task).getElement(n)
+      hover <- hoverType(element)
+    } yield hover
+//    val element = Trees.instance(task).getElement(node)
+//
+//    println("KIND: " + element.getKind)
+//    println("NAME: " + element.getSimpleName)
+//    println("TYPE: " + element.getClass)
+//    println("TREE: " + compiler.lastVisitedParentTrees)
+//
+//    hoverType(element)
   }
 
   def hoverType(element: Element): Option[Hover] = {
     element match {
       case e: VariableElement =>
         val prettyType = e.asType().accept(new JavaTypeVisitor(), null)
+
+        Some(new Hover(HoverMarkup.javaHoverMarkup(prettyType).toMarkupContent))
+      case e: TypeElement =>
+        println("TYPE ELEMENT: " + e.asType().getKind)
+        val prettyType = e.asType().accept(new JavaTypeVisitor(), null)
+        println("PRETTY: " + prettyType)
 
         Some(new Hover(HoverMarkup.javaHoverMarkup(prettyType).toMarkupContent))
       case _ => None

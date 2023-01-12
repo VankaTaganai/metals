@@ -32,7 +32,7 @@ class JavaMetalsGlobal {
       .asInstanceOf[JavacTask]
   }
 
-  var lastVisitedParentTrees: List[Tree] = Nil
+  var lastVisitedParentTrees: List[TreePath] = Nil
 
   def scanner(task: JavacTask): JavaTreeScanner = {
     val elems = task.parse()
@@ -45,11 +45,11 @@ class JavaMetalsGlobal {
   def compilerTreeNode(
       scanner: JavaTreeScanner,
       position: CursorPosition
-  ): TreePath = {
+  ): Option[TreePath] = {
     val path = scanner.scan(scanner.root, position)
     lastVisitedParentTrees = scanner.lastVisitedParentTrees
 
-    path
+    lastVisitedParentTrees.headOption
   }
 
   def getEndPosition(task: JavacTask, node: Tree): Long = {

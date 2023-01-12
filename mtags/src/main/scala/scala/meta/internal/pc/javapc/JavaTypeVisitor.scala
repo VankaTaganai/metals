@@ -26,11 +26,15 @@ class JavaTypeVisitor extends TypeVisitor[String, Void] {
 
   override def visitNull(t: NullType, p: Void): String = t.toString
 
-  override def visitArray(t: ArrayType, p: Void): String =
+  override def visitArray(t: ArrayType, p: Void): String = {
+    println("ARRAY")
     s"${visit(t.getComponentType)}[]"
+  }
 
   override def visitDeclared(t: DeclaredType, p: Void): String = {
     val declaredType = t.asElement().toString
+
+    println("DECLARED")
 
     val typeArguments = t.getTypeArguments
     val typeParameters =
@@ -40,12 +44,18 @@ class JavaTypeVisitor extends TypeVisitor[String, Void] {
     s"$declaredType$typeParameters"
   }
 
-  override def visitError(t: ErrorType, p: Void): String = ""
+  override def visitError(t: ErrorType, p: Void): String = {
+    println("ERROR")
+    ""
+  }
 
-  override def visitTypeVariable(t: TypeVariable, p: Void): String =
+  override def visitTypeVariable(t: TypeVariable, p: Void): String = {
+    println("TYPE VARIABLE")
     t.asElement().toString
+  }
 
   override def visitWildcard(t: WildcardType, p: Void): String = {
+    println("WILDCARD")
     val superBound = t.getSuperBound
     val extendsBound = t.getExtendsBound
 

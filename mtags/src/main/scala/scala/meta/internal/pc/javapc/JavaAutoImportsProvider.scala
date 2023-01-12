@@ -55,9 +55,7 @@ final class JavaAutoImportsProvider(
       scanner: JavaTreeScanner
   ): Option[AutoImportPosition] = {
     for {
-      pkg <- scanner.lastVisitedParentTrees.collectFirst {
-        case pkg: PackageTree => pkg
-      }
+      pkg <- scanner.lastVisitedPackageTrees.headOption
     } yield {
       new AutoImportPosition(
         scanner.getEndPosition(pkg).toInt,
