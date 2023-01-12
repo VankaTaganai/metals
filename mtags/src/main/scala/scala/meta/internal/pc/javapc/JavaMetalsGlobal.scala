@@ -42,8 +42,11 @@ class JavaMetalsGlobal {
     new JavaTreeScanner(task, root)
   }
 
-  def compilerTreeNode(scanner: JavaTreeScanner, offset: Int): TreePath = {
-    val path = scanner.scan(scanner.root, offset)
+  def compilerTreeNode(
+      scanner: JavaTreeScanner,
+      position: CursorPosition
+  ): TreePath = {
+    val path = scanner.scan(scanner.root, position)
     lastVisitedParentTrees = scanner.lastVisitedParentTrees
 
     path

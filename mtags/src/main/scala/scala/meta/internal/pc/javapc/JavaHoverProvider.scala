@@ -26,8 +26,13 @@ class JavaHoverProvider(
   def hoverOffset(params: OffsetParams): Option[Hover] = {
     val task: JavacTask = compiler.compilationTask(params.text())
     val scanner = compiler.scanner(task)
-    val node = compiler.compilerTreeNode(scanner, params.offset())
+    val position = params match {
+      case p: RangeParams =>
+        CursorPosition(p.offset(), p.offset(), p.endOffset())
+      case p: OffsetParams => CursorPosition(p.offset(), p.offset(), p.offset())
+    }
 
+    val node = compiler.compilerTreeNode(scanner, position)
     val element = Trees.instance(task).getElement(node)
 
     hoverType(element)

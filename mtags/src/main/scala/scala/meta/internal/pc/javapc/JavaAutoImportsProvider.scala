@@ -18,7 +18,9 @@ final class JavaAutoImportsProvider(
   def autoImports(): List[AutoImportsResult] = {
     val task: JavacTask = compiler.compilationTask(params.text())
     val scanner = compiler.scanner(task)
-    val node = compiler.compilerTreeNode(scanner, params.offset())
+    val position =
+      CursorPosition(params.offset(), params.offset(), params.offset())
+    val node = compiler.compilerTreeNode(scanner, position)
 
     val importPosition = autoImportPosition(params, scanner)
 
