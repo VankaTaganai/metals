@@ -1,6 +1,20 @@
 package scala.meta.internal.pc.javapc
 
-import com.sun.source.tree.{AssignmentTree, CaseTree, ClassTree, CompilationUnitTree, CompoundAssignmentTree, ErroneousTree, IdentifierTree, ImportTree, MemberReferenceTree, MemberSelectTree, PackageTree, Tree, VariableTree}
+import com.sun.source.tree.{
+  AssignmentTree,
+  CaseTree,
+  ClassTree,
+  CompilationUnitTree,
+  CompoundAssignmentTree,
+  ErroneousTree,
+  IdentifierTree,
+  ImportTree,
+  MemberReferenceTree,
+  MemberSelectTree,
+  PackageTree,
+  Tree,
+  VariableTree
+}
 import com.sun.source.util.{JavacTask, TreePath, TreePathScanner, Trees}
 
 import scala.collection.immutable.Nil
@@ -75,7 +89,8 @@ class JavaTreeScanner(
     val end = pos.getEndPosition(root, node.getExpressions.get(0))
 
     if (start <= p.start && p.end <= end) {
-      lastVisitedParentTrees = getCurrentPath.getParentPath :: lastVisitedParentTrees
+      lastVisitedParentTrees =
+        getCurrentPath.getParentPath :: lastVisitedParentTrees
       getCurrentPath.getParentPath
     }
     super.visitCase(node, p)
@@ -149,7 +164,11 @@ class JavaTreeScanner(
     pos.getEndPosition(root, node)
   }
 
-  private def visitNode[N <: Tree](node: N, p: CursorPosition, traverse: (N, CursorPosition) => TreePath): TreePath = {
+  private def visitNode[N <: Tree](
+      node: N,
+      p: CursorPosition,
+      traverse: (N, CursorPosition) => TreePath
+  ): TreePath = {
     val pos = Trees.instance(task).getSourcePositions
     val start = pos.getStartPosition(root, node)
     val end = pos.getEndPosition(root, node)
