@@ -1,12 +1,13 @@
 package scala.meta.internal.pc.javapc
 
-import com.sun.source.util.{JavacTask, Trees}
+import com.sun.source.util.{DocTrees, JavacTask, Trees}
 import org.eclipse.lsp4j.Hover
 
 import javax.lang.model.`type`.TypeMirror
 import javax.lang.model.element.ElementKind.{
   ANNOTATION_TYPE,
   CLASS,
+  CONSTRUCTOR,
   ENUM,
   INTERFACE,
   RECORD
@@ -16,6 +17,7 @@ import javax.lang.model.element.{
   ElementKind,
   ExecutableElement,
   Modifier,
+  PackageElement,
   TypeElement,
   VariableElement
 }
@@ -53,30 +55,51 @@ class JavaHoverProvider(
     for {
       n <- node
       element = Trees.instance(task).getElement(n)
-      hover <- hoverType(element)
+      docs = documentation(element, task)
+      hover <- hoverType(element, docs)
     } yield hover
   }
 
-  def hoverType(element: Element): Option[Hover] = {
+  def hoverType(element: Element, docs: String): Option[Hover] = {
+    println("DOCS: " + docs)
     println("KIND: " + element.getKind)
     println("NAME: " + element.getSimpleName)
     println("TYPE: " + element.getClass)
     println("TREE: " + compiler.lastVisitedParentTrees)
     element match {
       case e: VariableElement =>
-        val prettyType = typeHover(e.asType())
+        val prettyType = variableHover(e)
 
-        Some(new Hover(HoverMarkup.javaHoverMarkup(prettyType).toMarkupContent))
+        Some(
+          new Hover(
+            HoverMarkup.javaHoverMarkup("", prettyType, docs).toMarkupContent
+          )
+        )
       case e: TypeElement =>
         println("TYPE ELEMENT: " + e.asType().getKind)
         val prettyType = classHover(e)
         println("PRETTY: " + prettyType)
 
-        Some(new Hover(HoverMarkup.javaHoverMarkup(prettyType).toMarkupContent))
+        Some(
+          new Hover(
+            HoverMarkup.javaHoverMarkup("", prettyType, docs).toMarkupContent
+          )
+        )
       case e: ExecutableElement =>
         val prettyType = executableHover(e)
 
-        Some(new Hover(HoverMarkup.javaHoverMarkup(prettyType).toMarkupContent))
+        Some(
+          new Hover(
+            HoverMarkup.javaHoverMarkup("", prettyType, docs).toMarkupContent
+          )
+        )
+      case e: PackageElement =>
+        val prettyType = packageHover(e)
+        Some(
+          new Hover(
+            HoverMarkup.javaHoverMarkup("", prettyType, docs).toMarkupContent
+          )
+        )
       case _ => None
     }
   }
@@ -124,7 +147,10 @@ class JavaHoverProvider(
   private def executableHover(element: ExecutableElement): String = {
     val modifiers = modifiersHover(element)
     val returnType = typeHover(element.asType())
-    val functionName = element.getSimpleName
+    val functionName =
+      if (element.getKind == CONSTRUCTOR)
+        element.getEnclosingElement.getSimpleName
+      else element.getSimpleName
     val arguments =
       element.getParameters.asScala.map(argumentHover).mkString(", ")
 
@@ -137,6 +163,24 @@ class JavaHoverProvider(
           .mkString(" throws ", ", ", "")
 
     s"$modifiers$returnType $functionName($arguments)$throwsHover"
+  }
+
+  private def packageHover(element: PackageElement): String =
+    s"package ${element.getQualifiedName}"
+
+  private def variableHover(element: VariableElement): String = {
+    val modifiers = modifiersHover(element)
+    val variableType = typeHover(element.asType())
+    val name = element.getSimpleName
+
+    s"$modifiers$variableType $name"
+  }
+
+  private def documentation(element: Element, task: JavacTask): String = {
+    val d = DocTrees.instance(task).getDocCommentTree(element)
+
+    if (d == null) ""
+    else d.getFirstSentence.asScala.mkString("\n")
   }
 
 }

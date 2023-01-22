@@ -60,6 +60,19 @@ class HoverDefnSuite extends BaseJavaHoverSuite {
       |""".stripMargin,
     "public class class_definition.A".javaHover,
   )
+//
+//  check(
+//    "class definition generics",
+//    """
+//      |class B<T> {};
+//      |
+//      |public class @@A extends B<Integer> {
+//      |  public static void main(String args[]){
+//      |  }
+//      |}
+//      |""".stripMargin,
+//    "public class class_definition.A".javaHover,
+//  )
 
   check(
     "class definition with inheritance",

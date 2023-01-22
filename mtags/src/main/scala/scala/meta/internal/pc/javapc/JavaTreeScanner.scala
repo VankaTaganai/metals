@@ -11,6 +11,7 @@ import com.sun.source.tree.{
   ImportTree,
   MemberReferenceTree,
   MemberSelectTree,
+  NewClassTree,
   PackageTree,
   Tree,
   VariableTree
@@ -151,6 +152,23 @@ class JavaTreeScanner(
 
   override def visitClass(node: ClassTree, p: CursorPosition): TreePath = {
     visitNode(node, p, super.visitClass)
+  }
+
+  override def visitNewClass(
+      node: NewClassTree,
+      p: CursorPosition
+  ): TreePath = {
+    val pos = Trees.instance(task).getSourcePositions
+    val start = pos.getStartPosition(root, node.getIdentifier)
+    val end = pos.getEndPosition(root, node.getIdentifier)
+
+    if (start <= p.start && p.end <= end) {
+      lastVisitedParentTrees = getCurrentPath :: lastVisitedParentTrees
+      getCurrentPath
+    } else {
+      super.visitNewClass(node, p)
+      visitNode(node, p, super.visitNewClass)
+    }
   }
 
   override def reduce(a: TreePath, b: TreePath): TreePath = {
