@@ -14,21 +14,25 @@ import javax.lang.model.element.ElementKind.{
 }
 import javax.lang.model.element.{
   Element,
-  ElementKind,
   ExecutableElement,
-  Modifier,
   PackageElement,
   TypeElement,
   VariableElement
 }
-import scala.jdk.CollectionConverters.CollectionHasAsScala
+import scala.jdk.CollectionConverters.{CollectionHasAsScala, SeqHasAsJava}
 import scala.meta.internal.mtags.MtagsEnrichments.{
   XtensionOffsetParams,
   XtensionRangeParams,
   XtensionStringDoc
 }
 import scala.meta.internal.pc.HoverMarkup
-import scala.meta.pc.{OffsetParams, RangeParams}
+import scala.meta.pc.{OffsetParams, ParentSymbols, RangeParams}
+import com.sun.tools.javac.code.Symbol
+import com.sun.tools.javac.code.Symbol._
+import com.sun.tools.javac.code.Type.ClassType
+
+import java.util
+import scala.jdk.OptionConverters.RichOptional
 
 class JavaHoverProvider(
     compiler: JavaMetalsGlobal,
@@ -177,10 +181,95 @@ class JavaHoverProvider(
   }
 
   private def documentation(element: Element, task: JavacTask): String = {
-    val d = DocTrees.instance(task).getDocCommentTree(element)
-
-    if (d == null) ""
-    else d.getFirstSentence.asScala.mkString("\n")
+    element match {
+      case symbol: Symbol =>
+        val sym = semanticdbSymbol(symbol)
+        compiler.search
+          .documentation(
+            sym,
+            new ParentSymbols {
+              override def parents(): util.List[String] = symbol.owner
+                .asType() match {
+                case cType: ClassType =>
+                  (Seq(cType.supertype_field) ++ cType.interfaces_field.asScala)
+                    .map(t => semanticdbSymbol(t.tsym))
+                    .toList
+                    .asJava
+                case _ => util.List.of()
+              }
+            }
+          )
+          .toScala
+          .map(_.docstring())
+          .getOrElse("")
+      case _ => ""
+    }
   }
 
+  private def semanticdbSymbol(symbol: Symbol): String = {
+    if (symbol == null) Symbols.None
+    else {
+      val owner = semanticdbSymbol(symbol.owner)
+      val desc = {
+        val name = symbol.name.toString
+
+        symbol match {
+          case PackageSymbol => Descriptor.Package(name)
+          case MethodSymbol =>
+            Descriptor.Method(name, ???) // todo disambiguator
+          case ClassSymbol => Descriptor.Class(name)
+          case TypeVariableSymbol => Descriptor.TypeVariable(name)
+          case VarSymbol => Descriptor.Var(name)
+          case _ => Descriptor.None
+        }
+      }
+
+      if (owner != Symbols.RootPackage) owner + desc.toString
+      else desc.toString
+    }
+  }
+
+  object Symbols {
+    val None: String = ""
+    val RootPackage: String = "_root_/"
+  }
+
+  sealed trait Descriptor {
+    import Descriptor._
+
+    def value: String
+    override def toString: String = {
+      this match {
+        case None => ""
+        case Package(value) => s"${encode(value)}/"
+        case Method(value, disambiguator) => s"${encode(value)}$disambiguator."
+        case Class(value) => s"${encode(value)}#"
+        case TypeVariable(value) => s"[${encode(value)}]"
+        case Var(value) => s"${encode(value)}."
+      }
+    }
+  }
+  object Descriptor {
+    final case object None extends Descriptor {
+      override val value: String = ""
+    }
+    final case class Package(value: String) extends Descriptor
+    final case class Method(value: String, disambiguator: String)
+        extends Descriptor
+    final case class Class(value: String) extends Descriptor
+    final case class TypeVariable(value: String) extends Descriptor
+    final case class Var(value: String) extends Descriptor
+
+    def encode(value: String): String = {
+      if (value == "") {
+        "``"
+      } else {
+        val (start, parts) = (value.head, value.tail)
+        val isStartOk = Character.isJavaIdentifierStart(start)
+        val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
+        if (isStartOk && isPartsOk) value
+        else "`" + value + "`"
+      }
+    }
+  }
 }
