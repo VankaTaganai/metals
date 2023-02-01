@@ -13,12 +13,12 @@ import scala.collection.mutable
 import scala.meta.pc.SymbolSearch
 import scala.util.Using
 
-class JavaMetalsGlobal {
+class JavaMetalsGlobal(
+    val search: SymbolSearch
+) {
 
   private val COMPILER: JavaCompiler =
     ServiceLoader.load(classOf[JavaCompiler]).iterator.next
-
-  val search: SymbolSearch = ???
 
   def compilationTask(sourceCode: String): JavacTask = {
     val javaFileObject = SourceJavaFileObject.make(sourceCode)

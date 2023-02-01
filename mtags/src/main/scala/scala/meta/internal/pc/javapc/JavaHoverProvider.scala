@@ -184,6 +184,7 @@ class JavaHoverProvider(
     element match {
       case symbol: Symbol =>
         val sym = semanticdbSymbol(symbol)
+        println("SEMANITCDB: " + sym)
         compiler.search
           .documentation(
             sym,
@@ -207,25 +208,42 @@ class JavaHoverProvider(
   }
 
   private def semanticdbSymbol(symbol: Symbol): String = {
-    if (symbol == null) Symbols.None
+    if (symbol == null || symbol.name.toString == "") Symbols.None
     else {
       val owner = semanticdbSymbol(symbol.owner)
       val desc = {
         val name = symbol.name.toString
+        println("KIND: " + symbol.kind)
+        println("NAME: " + name)
 
         symbol match {
-          case PackageSymbol => Descriptor.Package(name)
-          case MethodSymbol =>
-            Descriptor.Method(name, ???) // todo disambiguator
-          case ClassSymbol => Descriptor.Class(name)
-          case TypeVariableSymbol => Descriptor.TypeVariable(name)
-          case VarSymbol => Descriptor.Var(name)
+          case _: PackageSymbol => Descriptor.Package(name)
+          case m: MethodSymbol =>
+            Descriptor.Method(name, disambiguator(m))
+          case _: ClassSymbol => Descriptor.Class(name)
+          case _: TypeVariableSymbol => Descriptor.TypeVariable(name)
+          case _: VarSymbol => Descriptor.Var(name)
           case _ => Descriptor.None
         }
       }
 
       if (owner != Symbols.RootPackage) owner + desc.toString
       else desc.toString
+    }
+  }
+
+  private def disambiguator(symbol: Symbol.MethodSymbol): String = {
+    val methods = symbol.owner.getEnclosedElements.asScala.collect {
+      case e: ExecutableElement if e.getSimpleName == symbol.name => e
+    }
+
+    val index = methods.zipWithIndex.collectFirst {
+      case (e, i) if e.equals(symbol) => i
+    }
+
+    index match {
+      case Some(i) => if (i == 0) "()" else s"($i)"
+      case None => "()"
     }
   }
 
@@ -261,15 +279,18 @@ class JavaHoverProvider(
     final case class Var(value: String) extends Descriptor
 
     def encode(value: String): String = {
-      if (value == "") {
-        "``"
-      } else {
-        val (start, parts) = (value.head, value.tail)
-        val isStartOk = Character.isJavaIdentifierStart(start)
-        val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
-        if (isStartOk && isPartsOk) value
-        else "`" + value + "`"
-      }
+      val v = (if (value == "") {
+                 ""
+               } else {
+                 val (start, parts) = (value.head, value.tail)
+                 val isStartOk = Character.isJavaIdentifierStart(start)
+                 val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
+                 if (isStartOk && isPartsOk) value
+                 else "`" + value + "`"
+               })
+
+      println("VAL: " + v)
+      v
     }
   }
 }

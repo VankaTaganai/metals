@@ -30,12 +30,14 @@ import scala.meta.pc.{
   SymbolSearch,
   VirtualFileParams
 }
-
 import scala.jdk.CollectionConverters._
+import scala.meta.internal.pc.EmptySymbolSearch
 
-class JavaPresentationCompiler extends PresentationCompiler {
+case class JavaPresentationCompiler(
+    search: SymbolSearch = EmptySymbolSearch
+) extends PresentationCompiler {
 
-  private val javaCompiler = new JavaMetalsGlobal
+  private val javaCompiler = new JavaMetalsGlobal(search)
 
   override def complete(
       params: OffsetParams
@@ -128,7 +130,8 @@ class JavaPresentationCompiler extends PresentationCompiler {
 
   override def restart(): Unit = ???
 
-  override def withSearch(search: SymbolSearch): PresentationCompiler = ???
+  override def withSearch(search: SymbolSearch): PresentationCompiler =
+    copy(search = search)
 
   override def withExecutorService(
       executorService: ExecutorService
