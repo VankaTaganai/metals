@@ -1,6 +1,7 @@
 package scala.meta.internal.pc.javapc
 
 import com.sun.source.util.{DocTrees, JavacTask, Trees}
+import com.sun.tools.javac.code.Type
 import org.eclipse.lsp4j.Hover
 
 import javax.lang.model.`type`.TypeMirror
@@ -191,11 +192,7 @@ class JavaHoverProvider(
             new ParentSymbols {
               override def parents(): util.List[String] = symbol.owner
                 .asType() match {
-                case cType: ClassType =>
-                  (Seq(cType.supertype_field) ++ cType.interfaces_field.asScala)
-                    .map(t => semanticdbSymbol(t.tsym))
-                    .toList
-                    .asJava
+                case cType: ClassType => overriddenSymbols(symbol, cType)
                 case _ => util.List.of()
               }
             }
@@ -205,6 +202,32 @@ class JavaHoverProvider(
           .getOrElse("")
       case _ => ""
     }
+  }
+
+  private def overriddenSymbols(
+      symbol: Symbol,
+      cType: ClassType
+  ): util.List[String] = {
+    val types = baseSymbols(cType)
+
+    (for {
+      t <- types
+      s <- t.tsym.getEnclosedElements.asScala
+      if s.getSimpleName == symbol.getSimpleName
+    } yield semanticdbSymbol(s)).asJava
+  }
+
+  private def baseSymbols(cType: ClassType): List[ClassType] = {
+    val superType = Option(cType.supertype_field)
+    val inheritedTypes =
+      if (cType.interfaces_field == null) List()
+      else cType.interfaces_field.asScala
+
+    val baseTypes = (superType ++ inheritedTypes).collect { case c: ClassType =>
+      c
+    }
+
+    baseTypes.flatMap(c => c :: baseSymbols(c)).toList
   }
 
   private def semanticdbSymbol(symbol: Symbol): String = {
