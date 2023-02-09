@@ -99,4 +99,18 @@ class HoverTermSuite extends BaseJavaHoverSuite {
       |""".stripMargin,
     """public static final java.nio.file.FileVisitResult CONTINUE""".javaHover,
   )
+
+  check(
+    "list",
+    """
+      |import java.util.List;
+      |
+      |class A {
+      |    public static void main(String args[]){
+      |        List<Integer> list = Li@@st.of(1, 2, 3);
+      |    }
+      |}
+      |""".stripMargin,
+    """public interface java.util.List<E> extends java.util.Collection<E>""".javaHover,
+  )
 }

@@ -9,7 +9,6 @@ import scala.meta.pc.{AutoImportsResult, OffsetParams}
 import org.eclipse.{lsp4j => l}
 
 import scala.jdk.CollectionConverters.SeqHasAsJava
-import scala.reflect.internal.util.{BatchSourceFile, Position}
 
 final class JavaAutoImportsProvider(
     compiler: JavaMetalsGlobal,
@@ -34,12 +33,7 @@ final class JavaAutoImportsProvider(
         qName =>
           val pos = importPosition.get
 
-          val editPosition = Position
-            .offset(
-              new BatchSourceFile(params.text(), params.uri().toString),
-              pos.offset
-            )
-            .toLsp
+          val editPosition = params.toLsp
 
           AutoImportsResultImpl(
             qName,
@@ -81,31 +75,27 @@ final class JavaAutoImportsProvider(
     i
   }
 
-  implicit class XtensionPositionMetals(pos: Position) {
-    // Same as `Position.includes` except handles an off-by-one bug when other.point > pos.end
-    def metalsIncludes(other: Position): Boolean = {
-      pos.includes(other) &&
-      (!other.isOffset || other.point != pos.end)
-    }
+  implicit class XtensionPositionMetals(pos: OffsetParams) {
     private def toPos(offset: Int): l.Position = {
-      val line = pos.source.offsetToLine(offset)
-      val column = offset - pos.source.lineToOffset(line)
+      val lines = pos.text().split("\n")
+
+      val (line, sum, _) = lines.foldLeft((0, 0, false)) {
+        case ((a, sum, true), _) => (a, sum, true)
+        case ((a, sum, _), b) =>
+          if (sum + b.length < pos.offset()) (a + 1, sum + b.length, false)
+          else (a, sum, true)
+      }
+      val column = offset - sum
       new l.Position(line, column)
     }
 
-    def isAfter(other: Position): Boolean = {
-      pos.isDefined &&
-      other.isDefined &&
-      pos.point > other.point
-    }
-
     def toLsp: l.Range = {
-      if (pos.isRange) {
-        new l.Range(toPos(pos.start), toPos(pos.end))
-      } else {
-        val p = toPos(pos.point)
-        new l.Range(p, p)
-      }
+//      if (pos.isRange) {
+//        new l.Range(toPos(pos.start), toPos(pos.end))
+//      } else {
+      val p = toPos(pos.offset())
+      new l.Range(p, p)
+//      }
     }
   }
 }

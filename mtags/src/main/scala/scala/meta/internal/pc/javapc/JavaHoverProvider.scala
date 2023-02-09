@@ -16,13 +16,13 @@ import javax.lang.model.element.ElementKind.{
 import javax.lang.model.element.{
   Element,
   ExecutableElement,
+  Modifier,
   PackageElement,
   TypeElement,
   VariableElement
 }
 import scala.jdk.CollectionConverters.{CollectionHasAsScala, SeqHasAsJava}
 import scala.meta.internal.mtags.MtagsEnrichments.{
-  XtensionOffsetParams,
   XtensionRangeParams,
   XtensionStringDoc
 }
@@ -32,6 +32,7 @@ import com.sun.tools.javac.code.Symbol
 import com.sun.tools.javac.code.Symbol._
 import com.sun.tools.javac.code.Type.ClassType
 
+import scala.meta.internal.mtags.MtagsEnrichments._
 import java.util
 import scala.jdk.OptionConverters.RichOptional
 
@@ -42,8 +43,14 @@ class JavaHoverProvider(
 
   def hover(): Option[Hover] = params match {
     case range: RangeParams => range.trimWhitespaceInRange.flatMap(hoverOffset)
-    case _ if params.isWhitespace => None
+    case _ if isWhitespace => None
     case _ => hoverOffset(params)
+  }
+
+  private def isWhitespace: Boolean = {
+    params.offset() < 0 ||
+    params.offset() >= params.text().length ||
+    params.text().charAt(params.offset()).isWhitespace
   }
 
   def hoverOffset(params: OffsetParams): Option[Hover] = {
@@ -60,14 +67,17 @@ class JavaHoverProvider(
     for {
       n <- node
       element = Trees.instance(task).getElement(n)
-      docs = documentation(element, task)
+      docs =
+        if (compiler.metalsConfig.isHoverDocumentationEnabled)
+          documentation(element, task)
+        else ""
       hover <- hoverType(element, docs)
     } yield hover
   }
 
   def hoverType(element: Element, docs: String): Option[Hover] = {
     println("DOCS: " + docs)
-    println("KIND: " + element.getKind)
+//    println("KIND: " + element.getKind)
     println("NAME: " + element.getSimpleName)
     println("TYPE: " + element.getClass)
     println("TREE: " + compiler.lastVisitedParentTrees)
@@ -112,31 +122,37 @@ class JavaHoverProvider(
   private def typeHover(t: TypeMirror): String =
     t.accept(new JavaTypeVisitor(), null)
 
-  private def modifiersHover(element: Element): String = {
-    val modifiers = element.getModifiers.asScala
+  private def modifiersHover(
+      element: Element,
+      filter: Set[Modifier] = Set()
+  ): String = {
+    val modifiers =
+      element.getModifiers.asScala.filterNot(m => filter.contains(m))
     if (modifiers.isEmpty) "" else modifiers.mkString("", " ", " ")
   }
 
   private def classHover(element: TypeElement): String = {
-    val modifiers = modifiersHover(element)
-    val typeKind = element.getKind match {
-      case CLASS => "class"
-      case INTERFACE => "interface"
-      case ENUM => "enum"
-      case ANNOTATION_TYPE => "@interface"
-//      case RECORD => "record"
-      case _ => ???
+    val (typeKind, fModifiers) = element.getKind match {
+      case CLASS => ("class", Set.empty[Modifier])
+      case INTERFACE => ("interface", Set(Modifier.ABSTRACT))
+      case ENUM => ("enum", Set.empty[Modifier])
+      case ANNOTATION_TYPE => ("@interface", Set.empty[Modifier])
+      case _ => ("", Set.empty[Modifier])
     }
+
+    val modifiers = modifiersHover(element, fModifiers)
 
     val name = typeHover(element.asType())
     val superClass = typeHover(element.getSuperclass) match {
-      case "java.lang.Object" => ""
+      case sC if sC == "java.lang.Object" || sC == "none" => ""
       case sC => s" extends $sC"
     }
 
     val implementedClasses = element.getInterfaces.asScala.map(typeHover)
     val implementedClassesHover =
       if (implementedClasses.isEmpty) ""
+      else if (element.getKind == INTERFACE)
+        implementedClasses.mkString(" extends ", ", ", "")
       else implementedClasses.mkString(" implements ", ", ", "")
 
     s"$modifiers$typeKind $name$superClass$implementedClassesHover"
@@ -231,28 +247,38 @@ class JavaHoverProvider(
   }
 
   private def semanticdbSymbol(symbol: Symbol): String = {
-    if (symbol == null || symbol.name.toString == "") Symbols.None
-    else {
-      val owner = semanticdbSymbol(symbol.owner)
-      val desc = {
-        val name = symbol.name.toString
-        println("KIND: " + symbol.kind)
-        println("NAME: " + name)
 
-        symbol match {
-          case _: PackageSymbol => Descriptor.Package(name)
-          case m: MethodSymbol =>
-            Descriptor.Method(name, disambiguator(m))
-          case _: ClassSymbol => Descriptor.Class(name)
-          case _: TypeVariableSymbol => Descriptor.TypeVariable(name)
-          case _: VarSymbol => Descriptor.Var(name)
-          case _ => Descriptor.None
+    def descriptors(symbol: Symbol): List[Descriptor] = {
+      if (symbol == null || symbol.name.toString == "") Descriptor.None :: Nil
+      else {
+        val owner = descriptors(symbol.owner)
+        val desc = {
+          val name = symbol.name.toString
+          println("KIND: " + symbol.kind)
+          println("NAME: " + name)
+
+          symbol match {
+            case _: PackageSymbol => Descriptor.Package(name)
+            case m: MethodSymbol =>
+              Descriptor.Method(name, disambiguator(m))
+            case _: ClassSymbol => Descriptor.Class(name)
+            case _: TypeVariableSymbol => Descriptor.TypeVariable(name)
+            case _: VarSymbol => Descriptor.Var(name)
+            case _ => Descriptor.None
+          }
         }
-      }
 
-      if (owner != Symbols.RootPackage) owner + desc.toString
-      else desc.toString
+        desc :: owner
+      }
     }
+
+    val decs = descriptors(symbol).filter(_ != Descriptor.None).reverse
+
+    (decs match {
+      case Nil => List.empty[Descriptor]
+      case d @ (Descriptor.Package(_) :: _) => d
+      case d => Descriptor.Package("_empty_") :: d
+    }).mkString("")
   }
 
   private def disambiguator(symbol: Symbol.MethodSymbol): String = {
@@ -265,7 +291,7 @@ class JavaHoverProvider(
     }
 
     index match {
-      case Some(i) => if (i == 0) "()" else s"($i)"
+      case Some(i) => if (i == 0) "()" else s"(+$i)"
       case None => "()"
     }
   }
@@ -291,7 +317,7 @@ class JavaHoverProvider(
     }
   }
   object Descriptor {
-    final case object None extends Descriptor {
+    case object None extends Descriptor {
       override val value: String = ""
     }
     final case class Package(value: String) extends Descriptor

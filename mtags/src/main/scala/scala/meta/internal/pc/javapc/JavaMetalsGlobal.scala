@@ -10,11 +10,12 @@ import scala.jdk.CollectionConverters._
 import java.util.ServiceLoader
 import javax.tools.JavaCompiler
 import scala.collection.mutable
-import scala.meta.pc.SymbolSearch
+import scala.meta.pc.{PresentationCompilerConfig, SymbolSearch}
 import scala.util.Using
 
 class JavaMetalsGlobal(
-    val search: SymbolSearch
+    val search: SymbolSearch,
+    val metalsConfig: PresentationCompilerConfig
 ) {
 
   private val COMPILER: JavaCompiler =

@@ -5,6 +5,9 @@ import tests.pc.javapc.BaseJavaHoverSuite
 import java.util
 
 class HoverDocSuite extends BaseJavaHoverSuite {
+
+  override val documentationHoverEnabled = true
+
   check(
     "doc",
     """
@@ -74,5 +77,42 @@ class HoverDocSuite extends BaseJavaHoverSuite {
        |```
        |Converts a path string, or a sequence of strings that when joined form
        |a path string, to a `Path`.""".stripMargin,
+  )
+
+  check(
+    "list-of",
+    """
+      |import java.util.List;
+      |
+      |class A {
+      |    public static void main(String args[]){
+      |        List.o@@f(1, 2 3);
+      |    }
+      |}
+      |""".stripMargin,
+    """|```java
+       |public static java.util.List<E> of(E arg0, E arg1)
+       |```
+       |Returns an unmodifiable list containing two elements.
+       |
+       |See [Unmodifiable Lists]() for details.""".stripMargin,
+  )
+
+  check(
+    "method",
+    """
+      |import java.util.List;
+      |
+      |class A {
+      |    /**MAIN HOVER*/
+      |    public static void main(){
+      |        mai@@n();
+      |    }
+      |}
+      |""".stripMargin,
+    """|```java
+       |public static void main()
+       |```
+       |MAIN HOVER.""".stripMargin,
   )
 }

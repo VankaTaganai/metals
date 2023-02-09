@@ -5,11 +5,9 @@ import java.nio.file.Paths
 import java.util.Collections
 import java.util.concurrent.ScheduledExecutorService
 import java.{util => ju}
-
 import scala.concurrent.ExecutionContextExecutorService
 import scala.concurrent.Future
 import scala.util.Try
-
 import scala.meta.inputs.Input
 import scala.meta.inputs.Position
 import scala.meta.internal.metals.Compilers.PresentationCompilerKey
@@ -25,7 +23,6 @@ import scala.meta.pc.CancelToken
 import scala.meta.pc.OffsetParams
 import scala.meta.pc.PresentationCompiler
 import scala.meta.pc.SymbolSearch
-
 import ch.epfl.scala.bsp4j.BuildTargetIdentifier
 import ch.epfl.scala.bsp4j.CompileReport
 import org.eclipse.lsp4j.CompletionItem
@@ -46,6 +43,8 @@ import org.eclipse.lsp4j.TextEdit
 import org.eclipse.lsp4j.{Position => LspPosition}
 import org.eclipse.lsp4j.{Range => LspRange}
 import org.eclipse.lsp4j.{debug => d}
+
+import scala.meta.internal.pc.javapc.JavaPresentationCompiler
 
 /**
  * Manages lifecycle for presentation compilers in all build targets.
@@ -580,13 +579,17 @@ class Compilers(
     def fromBuildTarget: Option[PresentationCompiler] = {
       val target = buildTargets
         .inverseSources(path)
+
       target match {
         case None => Some(fallbackCompiler(path))
-        case Some(value) => loadCompiler(value)
+        case Some(value) =>
+          if (path.isScalaFilename) loadCompiler(value)
+          else if (path.isJavaFilename) loadJavaCompiler(value)
+          else None
       }
     }
 
-    if (!path.isScalaFilename) None
+    if (!path.isScalaFilename && !path.isJavaFilename) None
     else if (path.isWorksheet)
       loadWorksheetCompiler(path).orElse(fromBuildTarget)
     else fromBuildTarget
@@ -678,6 +681,13 @@ class Compilers(
     target.flatMap(loadCompilerForTarget)
   }
 
+  def loadJavaCompiler(
+      targetId: BuildTargetIdentifier
+  ): Option[PresentationCompiler] = {
+    val target = buildTargets.javaTarget(targetId)
+    target.flatMap(loadJavaCompilerForTarget)
+  }
+
   def loadCompilerForTarget(
       scalaTarget: ScalaTarget
   ): Option[PresentationCompiler] = {
@@ -699,6 +709,26 @@ class Compilers(
         scribe.warn(s"unsupported Scala ${scalaTarget.scalaVersion}")
         None
     }
+  }
+
+  def loadJavaCompilerForTarget(
+      target: JavaTarget
+  ): Option[PresentationCompiler] = {
+    val pc = JavaPresentationCompiler()
+
+    val name = target.javac.getTarget.getUri
+    val classpath =
+      target.javac.classpath.toAbsoluteClasspath.map(_.toNIO).toSeq
+    val options = target.javac.getOptions.asScala.toSeq
+    val filteredOptions = plugins.filterSupportedOptions(options)
+
+    Some(
+      configure(pc, search).newInstance(
+        name,
+        classpath.asJava,
+        (log ++ filteredOptions).asJava,
+      )
+    )
   }
 
   private def withPCAndAdjustLsp[T](

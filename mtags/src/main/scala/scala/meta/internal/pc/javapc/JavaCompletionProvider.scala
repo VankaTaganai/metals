@@ -27,7 +27,7 @@ class JavaCompletionProvider(
       case Some(n) =>
         n.getLeaf.getKind match {
           case MEMBER_SELECT => completeMemberSelect(task, n)
-          case _ => ??? // TODO: Handle all options
+          case _ => new CompletionList() // TODO: Handle all options
         }
       case None => new CompletionList()
     }

@@ -20,6 +20,8 @@ import java.util.concurrent.{
   ExecutorService,
   ScheduledExecutorService
 }
+import scala.collection.Seq
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.meta.pc.{
   AutoImportsResult,
   DefinitionResult,
@@ -31,13 +33,25 @@ import scala.meta.pc.{
   VirtualFileParams
 }
 import scala.jdk.CollectionConverters._
-import scala.meta.internal.pc.EmptySymbolSearch
+import scala.meta.internal.mtags.BuildInfo
+import scala.meta.internal.pc.{
+  DefinitionResultImpl,
+  EmptySymbolSearch,
+  PresentationCompilerConfigImpl
+}
 
 case class JavaPresentationCompiler(
-    search: SymbolSearch = EmptySymbolSearch
+    buildTargetIdentifier: String = "",
+    classpath: Seq[Path] = Nil,
+    options: List[String] = Nil,
+    search: SymbolSearch = EmptySymbolSearch,
+    ec: ExecutionContextExecutor = ExecutionContext.global,
+    sh: Option[ScheduledExecutorService] = None,
+    config: PresentationCompilerConfig = PresentationCompilerConfigImpl(),
+    workspace: Option[Path] = None
 ) extends PresentationCompiler {
 
-  private val javaCompiler = new JavaMetalsGlobal(search)
+  private val javaCompiler = new JavaMetalsGlobal(search, config)
 
   override def complete(
       params: OffsetParams
@@ -49,11 +63,12 @@ case class JavaPresentationCompiler(
   override def completionItemResolve(
       item: CompletionItem,
       symbol: String
-  ): CompletableFuture[CompletionItem] = ???
+  ): CompletableFuture[CompletionItem] = CompletableFuture.completedFuture(item)
 
   override def signatureHelp(
       params: OffsetParams
-  ): CompletableFuture[SignatureHelp] = ???
+  ): CompletableFuture[SignatureHelp] =
+    CompletableFuture.completedFuture(new SignatureHelp())
 
   override def hover(params: OffsetParams): CompletableFuture[Optional[Hover]] =
     CompletableFuture.completedFuture(
@@ -65,24 +80,28 @@ case class JavaPresentationCompiler(
   override def rename(
       params: OffsetParams,
       name: String
-  ): CompletableFuture[util.List[TextEdit]] = ???
+  ): CompletableFuture[util.List[TextEdit]] =
+    CompletableFuture.completedFuture(Nil.asJava)
 
   override def definition(
       params: OffsetParams
-  ): CompletableFuture[DefinitionResult] = ???
+  ): CompletableFuture[DefinitionResult] =
+    CompletableFuture.completedFuture(DefinitionResultImpl.empty)
 
   override def typeDefinition(
       params: OffsetParams
-  ): CompletableFuture[DefinitionResult] = ???
+  ): CompletableFuture[DefinitionResult] =
+    CompletableFuture.completedFuture(DefinitionResultImpl.empty)
 
   override def documentHighlight(
       params: OffsetParams
-  ): CompletableFuture[util.List[DocumentHighlight]] = ???
+  ): CompletableFuture[util.List[DocumentHighlight]] =
+    CompletableFuture.completedFuture(Nil.asJava)
 
   override def getTasty(
       targetUri: URI,
       isHttpEnabled: Boolean
-  ): CompletableFuture[String] = ???
+  ): CompletableFuture[String] = CompletableFuture.completedFuture("")
 
   override def autoImports(
       name: String,
@@ -95,67 +114,81 @@ case class JavaPresentationCompiler(
 
   override def implementAbstractMembers(
       params: OffsetParams
-  ): CompletableFuture[util.List[TextEdit]] = ???
+  ): CompletableFuture[util.List[TextEdit]] =
+    CompletableFuture.completedFuture(Nil.asJava)
 
   override def insertInferredType(
       params: OffsetParams
-  ): CompletableFuture[util.List[TextEdit]] = ???
+  ): CompletableFuture[util.List[TextEdit]] =
+    CompletableFuture.completedFuture(Nil.asJava)
 
   override def extractMethod(
       range: RangeParams,
       extractionPos: OffsetParams
-  ): CompletableFuture[util.List[TextEdit]] = ???
+  ): CompletableFuture[util.List[TextEdit]] =
+    CompletableFuture.completedFuture(Nil.asJava)
 
   override def convertToNamedArguments(
       params: OffsetParams,
       argIndices: util.List[Integer]
-  ): CompletableFuture[util.List[TextEdit]] = ???
+  ): CompletableFuture[util.List[TextEdit]] =
+    CompletableFuture.completedFuture(Nil.asJava)
 
   override def didChange(
       params: VirtualFileParams
-  ): CompletableFuture[util.List[Diagnostic]] = ???
+  ): CompletableFuture[util.List[Diagnostic]] =
+    CompletableFuture.completedFuture(Nil.asJava)
 
-  override def didClose(uri: URI): Unit = ???
+  override def didClose(uri: URI): Unit = ()
 
   override def semanticdbTextDocument(
       filename: URI,
       code: String
-  ): CompletableFuture[Array[Byte]] = ???
+  ): CompletableFuture[Array[Byte]] =
+    CompletableFuture.completedFuture(Array.emptyByteArray)
 
   override def selectionRange(
       params: util.List[OffsetParams]
-  ): CompletableFuture[util.List[SelectionRange]] = ???
+  ): CompletableFuture[util.List[SelectionRange]] =
+    CompletableFuture.completedFuture(Nil.asJava)
 
-  override def shutdown(): Unit = ???
+  override def shutdown(): Unit = ()
 
-  override def restart(): Unit = ???
+  override def restart(): Unit = ()
 
   override def withSearch(search: SymbolSearch): PresentationCompiler =
     copy(search = search)
 
   override def withExecutorService(
       executorService: ExecutorService
-  ): PresentationCompiler = ???
+  ): PresentationCompiler =
+    copy(ec = ExecutionContext.fromExecutorService(executorService))
 
   override def withScheduledExecutorService(
       scheduledExecutorService: ScheduledExecutorService
-  ): PresentationCompiler = ???
+  ): PresentationCompiler = copy(sh = Some(scheduledExecutorService))
 
   override def withConfiguration(
       config: PresentationCompilerConfig
-  ): PresentationCompiler = ???
+  ): PresentationCompiler = copy(config = config)
 
-  override def withWorkspace(workspace: Path): PresentationCompiler = ???
+  override def withWorkspace(workspace: Path): PresentationCompiler =
+    copy(workspace = Some(workspace))
 
   override def newInstance(
       buildTargetIdentifier: String,
       classpath: util.List[Path],
       options: util.List[String]
-  ): PresentationCompiler = ???
+  ): PresentationCompiler =
+    copy(
+      buildTargetIdentifier = buildTargetIdentifier,
+      classpath = classpath.asScala,
+      options = options.asScala.toList
+    )
 
-  override def diagnosticsForDebuggingPurposes(): util.List[String] = ???
+  override def diagnosticsForDebuggingPurposes(): util.List[String] = Nil.asJava
 
-  override def isLoaded: Boolean = ???
+  override def isLoaded: Boolean = true
 
-  override def scalaVersion(): String = ???
+  override def scalaVersion(): String = BuildInfo.scalaCompilerVersion
 }

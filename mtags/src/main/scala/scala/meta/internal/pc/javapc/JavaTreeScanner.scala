@@ -9,6 +9,7 @@ import com.sun.source.tree.{
   ErroneousTree,
   IdentifierTree,
   ImportTree,
+  LiteralTree,
   MemberReferenceTree,
   MemberSelectTree,
   NewClassTree,

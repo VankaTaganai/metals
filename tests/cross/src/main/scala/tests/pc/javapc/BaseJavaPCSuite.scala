@@ -19,12 +19,15 @@ import scala.meta.internal.metals.{
   JdkSources,
   PackageIndex,
 }
+import scala.meta.internal.pc.PresentationCompilerConfigImpl
 import scala.meta.internal.pc.javapc.JavaPresentationCompiler
 import scala.meta.io.AbsolutePath
 import scala.meta.pc.PresentationCompiler
 import scala.util.control.NonFatal
 
 abstract class BaseJavaPCSuite extends BaseSuite { // todo: General Logic
+
+  val documentationHoverEnabled = false
 
   val allRepos: Seq[Repository] =
     Repository.defaults().asScala.toSeq
@@ -49,6 +52,10 @@ abstract class BaseJavaPCSuite extends BaseSuite { // todo: General Logic
 
     JavaPresentationCompiler()
       .withSearch(search)
+      .withConfiguration(
+        PresentationCompilerConfigImpl()
+          .copy(isHoverDocumentationEnabled = documentationHoverEnabled)
+      )
   }
 
   val tmp: AbsolutePath = AbsolutePath(Files.createTempDirectory("java.metals"))
@@ -93,6 +100,8 @@ abstract class BaseJavaPCSuite extends BaseSuite { // todo: General Logic
       case NonFatal(e) =>
         println(s"warn: ${e.getMessage()}")
     }
+    println("ADDED FILE")
+    println("FILE: " + file)
     workspace.inputs(filename) = (code2, dialect)
   }
 }
