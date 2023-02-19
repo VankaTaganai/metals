@@ -1,4 +1,4 @@
-package scala.meta.internal.pc.javapc
+package scala.meta.internal.pc
 
 import org.eclipse.lsp4j.{
   CompletionItem,

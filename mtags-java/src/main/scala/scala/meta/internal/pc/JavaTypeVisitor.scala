@@ -1,4 +1,4 @@
-package scala.meta.internal.pc.javapc
+package scala.meta.internal.pc
 
 import javax.lang.model.`type`.{
   ArrayType,

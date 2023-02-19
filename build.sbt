@@ -352,6 +352,13 @@ lazy val mtags = project
   .dependsOn(interfaces)
   .enablePlugins(BuildInfoPlugin)
 
+lazy val `mtags-java` = project
+  .settings(
+    moduleName := "mtags-java"
+  )
+  .dependsOn(interfaces, mtags)
+  .enablePlugins(BuildInfoPlugin)
+
 lazy val metals = project
   .settings(
     sharedSettings,
@@ -471,7 +478,7 @@ lazy val metals = project
       "scala3" -> V.scala3,
     ),
   )
-  .dependsOn(mtags)
+  .dependsOn(mtags, `mtags-java`)
   .enablePlugins(BuildInfoPlugin)
 
 lazy val `sbt-metals` = project

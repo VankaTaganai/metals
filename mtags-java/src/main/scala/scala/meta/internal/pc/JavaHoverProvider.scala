@@ -1,4 +1,4 @@
-package scala.meta.internal.pc.javapc
+package scala.meta.internal.pc
 
 import com.sun.source.util.{DocTrees, JavacTask, Trees}
 import com.sun.tools.javac.code.Type

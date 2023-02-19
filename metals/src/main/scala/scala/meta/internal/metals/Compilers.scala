@@ -44,7 +44,7 @@ import org.eclipse.lsp4j.{Position => LspPosition}
 import org.eclipse.lsp4j.{Range => LspRange}
 import org.eclipse.lsp4j.{debug => d}
 
-import scala.meta.internal.pc.javapc.JavaPresentationCompiler
+import scala.meta.internal.pc.JavaPresentationCompiler
 
 /**
  * Manages lifecycle for presentation compilers in all build targets.

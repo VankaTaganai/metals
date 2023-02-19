@@ -1,4 +1,4 @@
-package scala.meta.internal.pc.javapc
+package scala.meta.internal.pc
 
 import com.sun.source.tree.MemberSelectTree
 import com.sun.source.util.{JavacTask, TreePath}
