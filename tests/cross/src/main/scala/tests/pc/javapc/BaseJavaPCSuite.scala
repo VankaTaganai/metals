@@ -1,6 +1,6 @@
 package tests.pc.javapc
 
-import coursierapi.{Fetch, Repository}
+import coursierapi.{Dependency, Fetch, Repository}
 import tests.{
   BaseSuite,
   DelegatingGlobalSymbolIndex,
@@ -10,7 +10,7 @@ import tests.{
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
-import scala.jdk.CollectionConverters.CollectionHasAsScala
+import scala.jdk.CollectionConverters.{CollectionHasAsScala, SeqHasAsJava}
 import scala.meta.dialects
 import scala.meta.internal.metals.{
   ClasspathSearch,
@@ -38,7 +38,18 @@ abstract class BaseJavaPCSuite extends BaseSuite { // todo: General Logic
   protected lazy val presentationCompiler: PresentationCompiler = {
     val javaLibrary = PackageIndex.javaLibrary // todo
 
-    val myclasspath: Seq[Path] = javaLibrary
+    val fetch = Fetch
+      .create()
+      .withRepositories(allRepos: _*)
+
+    extraDependencies.foreach(fetch.addDependencies(_))
+    val extraLibraries: Seq[Path] = fetch
+      .fetch()
+      .asScala
+      .map(_.toPath())
+      .toSeq
+
+    val myclasspath: Seq[Path] = javaLibrary ++ extraLibraries
 
     JdkSources().foreach(jdk => index.addSourceJar(jdk, dialects.Scala213))
     println("CLASSPATH: " + myclasspath)
@@ -56,6 +67,7 @@ abstract class BaseJavaPCSuite extends BaseSuite { // todo: General Logic
         PresentationCompilerConfigImpl()
           .copy(isHoverDocumentationEnabled = documentationHoverEnabled)
       )
+      .newInstance("", myclasspath.asJava, Nil.asJava)
   }
 
   val tmp: AbsolutePath = AbsolutePath(Files.createTempDirectory("java.metals"))
@@ -104,4 +116,7 @@ abstract class BaseJavaPCSuite extends BaseSuite { // todo: General Logic
     println("FILE: " + file)
     workspace.inputs(filename) = (code2, dialect)
   }
+
+  protected def extraDependencies: Seq[Dependency] =
+    Seq.empty
 }
