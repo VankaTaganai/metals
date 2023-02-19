@@ -36,7 +36,7 @@ class BaseJavaCompletionSuite extends BaseJavaPCSuite {
 
   private def getItems(
       original: String,
-      filename: String = "A.scala",
+      filename: String,
   ): Seq[CompletionItem] = {
     val (code, offset) = params(original)
     val offsetParams = CompilerOffsetParams(

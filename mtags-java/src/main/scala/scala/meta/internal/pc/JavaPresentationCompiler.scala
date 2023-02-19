@@ -8,7 +8,7 @@ import org.eclipse.lsp4j.{
   Hover,
   SelectionRange,
   SignatureHelp,
-  TextEdit
+  TextEdit,
 }
 
 import java.net.URI
@@ -18,7 +18,7 @@ import java.{lang, util}
 import java.util.concurrent.{
   CompletableFuture,
   ExecutorService,
-  ScheduledExecutorService
+  ScheduledExecutorService,
 }
 import scala.collection.Seq
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
@@ -30,14 +30,14 @@ import scala.meta.pc.{
   PresentationCompilerConfig,
   RangeParams,
   SymbolSearch,
-  VirtualFileParams
+  VirtualFileParams,
 }
 import scala.jdk.CollectionConverters._
 import scala.meta.internal.mtags.BuildInfo
 import scala.meta.internal.pc.{
   DefinitionResultImpl,
   EmptySymbolSearch,
-  PresentationCompilerConfigImpl
+  PresentationCompilerConfigImpl,
 }
 
 case class JavaPresentationCompiler(
@@ -48,7 +48,7 @@ case class JavaPresentationCompiler(
     ec: ExecutionContextExecutor = ExecutionContext.global,
     sh: Option[ScheduledExecutorService] = None,
     config: PresentationCompilerConfig = PresentationCompilerConfigImpl(),
-    workspace: Option[Path] = None
+    workspace: Option[Path] = None,
 ) extends PresentationCompiler {
 
   private val javaCompiler = new JavaMetalsGlobal(search, config)
@@ -62,7 +62,7 @@ case class JavaPresentationCompiler(
 
   override def completionItemResolve(
       item: CompletionItem,
-      symbol: String
+      symbol: String,
   ): CompletableFuture[CompletionItem] = CompletableFuture.completedFuture(item)
 
   override def signatureHelp(
@@ -79,7 +79,7 @@ case class JavaPresentationCompiler(
 
   override def rename(
       params: OffsetParams,
-      name: String
+      name: String,
   ): CompletableFuture[util.List[TextEdit]] =
     CompletableFuture.completedFuture(Nil.asJava)
 
@@ -100,13 +100,13 @@ case class JavaPresentationCompiler(
 
   override def getTasty(
       targetUri: URI,
-      isHttpEnabled: Boolean
+      isHttpEnabled: Boolean,
   ): CompletableFuture[String] = CompletableFuture.completedFuture("")
 
   override def autoImports(
       name: String,
       params: OffsetParams,
-      isExtension: lang.Boolean
+      isExtension: lang.Boolean,
   ): CompletableFuture[util.List[AutoImportsResult]] =
     CompletableFuture.completedFuture(
       new JavaAutoImportsProvider(javaCompiler, params).autoImports().asJava
@@ -124,13 +124,13 @@ case class JavaPresentationCompiler(
 
   override def extractMethod(
       range: RangeParams,
-      extractionPos: OffsetParams
+      extractionPos: OffsetParams,
   ): CompletableFuture[util.List[TextEdit]] =
     CompletableFuture.completedFuture(Nil.asJava)
 
   override def convertToNamedArguments(
       params: OffsetParams,
-      argIndices: util.List[Integer]
+      argIndices: util.List[Integer],
   ): CompletableFuture[util.List[TextEdit]] =
     CompletableFuture.completedFuture(Nil.asJava)
 
@@ -143,7 +143,7 @@ case class JavaPresentationCompiler(
 
   override def semanticdbTextDocument(
       filename: URI,
-      code: String
+      code: String,
   ): CompletableFuture[Array[Byte]] =
     CompletableFuture.completedFuture(Array.emptyByteArray)
 
@@ -178,12 +178,12 @@ case class JavaPresentationCompiler(
   override def newInstance(
       buildTargetIdentifier: String,
       classpath: util.List[Path],
-      options: util.List[String]
+      options: util.List[String],
   ): PresentationCompiler =
     copy(
       buildTargetIdentifier = buildTargetIdentifier,
       classpath = classpath.asScala,
-      options = options.asScala.toList
+      options = options.asScala.toList,
     )
 
   override def diagnosticsForDebuggingPurposes(): util.List[String] = Nil.asJava

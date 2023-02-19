@@ -11,7 +11,7 @@ import javax.lang.model.element.ElementKind.{
   CONSTRUCTOR,
   ENUM,
   INTERFACE,
-  RECORD
+  RECORD,
 }
 import javax.lang.model.element.{
   Element,
@@ -19,12 +19,12 @@ import javax.lang.model.element.{
   Modifier,
   PackageElement,
   TypeElement,
-  VariableElement
+  VariableElement,
 }
 import scala.jdk.CollectionConverters.{CollectionHasAsScala, SeqHasAsJava}
 import scala.meta.internal.mtags.MtagsEnrichments.{
   XtensionRangeParams,
-  XtensionStringDoc
+  XtensionStringDoc,
 }
 import scala.meta.internal.pc.HoverMarkup
 import scala.meta.pc.{OffsetParams, ParentSymbols, RangeParams}
@@ -38,7 +38,7 @@ import scala.jdk.OptionConverters.RichOptional
 
 class JavaHoverProvider(
     compiler: JavaMetalsGlobal,
-    params: OffsetParams
+    params: OffsetParams,
 ) {
 
   def hover(): Option[Hover] = params match {
@@ -124,7 +124,7 @@ class JavaHoverProvider(
 
   private def modifiersHover(
       element: Element,
-      filter: Set[Modifier] = Set()
+      filter: Set[Modifier] = Set(),
   ): String = {
     val modifiers =
       element.getModifiers.asScala.filterNot(m => filter.contains(m))
@@ -211,7 +211,7 @@ class JavaHoverProvider(
                 case cType: ClassType => overriddenSymbols(symbol, cType)
                 case _ => util.List.of()
               }
-            }
+            },
           )
           .toScala
           .map(_.docstring())
@@ -222,7 +222,7 @@ class JavaHoverProvider(
 
   private def overriddenSymbols(
       symbol: Symbol,
-      cType: ClassType
+      cType: ClassType,
   ): util.List[String] = {
     val types = baseSymbols(cType)
 
@@ -249,7 +249,7 @@ class JavaHoverProvider(
   private def semanticdbSymbol(symbol: Symbol): String = {
 
     def descriptors(symbol: Symbol): List[Descriptor] = {
-      if (symbol == null || symbol.name.toString == "") Descriptor.None :: Nil
+      if (symbol == null || symbol.name.toString == "") Empty :: Nil
       else {
         val owner = descriptors(symbol.owner)
         val desc = {
@@ -258,13 +258,12 @@ class JavaHoverProvider(
           println("NAME: " + name)
 
           symbol match {
-            case _: PackageSymbol => Descriptor.Package(name)
-            case m: MethodSymbol =>
-              Descriptor.Method(name, disambiguator(m))
-            case _: ClassSymbol => Descriptor.Class(name)
-            case _: TypeVariableSymbol => Descriptor.TypeVariable(name)
-            case _: VarSymbol => Descriptor.Var(name)
-            case _ => Descriptor.None
+            case _: PackageSymbol => Package(name)
+            case m: MethodSymbol => Method(name, disambiguator(m))
+            case _: ClassSymbol => Class(name)
+            case _: TypeVariableSymbol => TypeVariable(name)
+            case _: VarSymbol => Var(name)
+            case _ => Empty
           }
         }
 
@@ -272,12 +271,12 @@ class JavaHoverProvider(
       }
     }
 
-    val decs = descriptors(symbol).filter(_ != Descriptor.None).reverse
+    val decs = descriptors(symbol).filter(_ != Empty).reverse
 
     (decs match {
       case Nil => List.empty[Descriptor]
-      case d @ (Descriptor.Package(_) :: _) => d
-      case d => Descriptor.Package("_empty_") :: d
+      case d @ (Package(_) :: _) => d
+      case d => Package("_empty_") :: d
     }).mkString("")
   }
 
@@ -299,47 +298,5 @@ class JavaHoverProvider(
   object Symbols {
     val None: String = ""
     val RootPackage: String = "_root_/"
-  }
-
-  sealed trait Descriptor {
-    import Descriptor._
-
-    def value: String
-    override def toString: String = {
-      this match {
-        case None => ""
-        case Package(value) => s"${encode(value)}/"
-        case Method(value, disambiguator) => s"${encode(value)}$disambiguator."
-        case Class(value) => s"${encode(value)}#"
-        case TypeVariable(value) => s"[${encode(value)}]"
-        case Var(value) => s"${encode(value)}."
-      }
-    }
-  }
-  object Descriptor {
-    case object None extends Descriptor {
-      override val value: String = ""
-    }
-    final case class Package(value: String) extends Descriptor
-    final case class Method(value: String, disambiguator: String)
-        extends Descriptor
-    final case class Class(value: String) extends Descriptor
-    final case class TypeVariable(value: String) extends Descriptor
-    final case class Var(value: String) extends Descriptor
-
-    def encode(value: String): String = {
-      val v = (if (value == "") {
-                 ""
-               } else {
-                 val (start, parts) = (value.head, value.tail)
-                 val isStartOk = Character.isJavaIdentifierStart(start)
-                 val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
-                 if (isStartOk && isPartsOk) value
-                 else "`" + value + "`"
-               })
-
-      println("VAL: " + v)
-      v
-    }
   }
 }

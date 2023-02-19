@@ -622,7 +622,7 @@ lazy val cross = project
     sharedSettings,
     crossScalaVersions := V.nonDeprecatedScalaVersions,
   )
-  .dependsOn(mtest, mtags)
+  .dependsOn(mtest, mtags, `mtags-java`)
 
 def isInTestShard(name: String, logger: Logger): Boolean = {
   val groupIndex = TestGroups.testGroups.indexWhere(group => group(name))

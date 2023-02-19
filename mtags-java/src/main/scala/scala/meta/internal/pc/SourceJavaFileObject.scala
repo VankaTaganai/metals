@@ -6,7 +6,7 @@ import javax.tools.JavaFileObject.Kind
 import javax.tools.SimpleJavaFileObject
 
 class SourceJavaFileObject(src: String, uri: URI, kind: Kind)
-  extends SimpleJavaFileObject(uri, kind) {
+    extends SimpleJavaFileObject(uri, kind) {
   override def getCharContent(ignoreEncodingErrors: Boolean): CharSequence = src
 }
 

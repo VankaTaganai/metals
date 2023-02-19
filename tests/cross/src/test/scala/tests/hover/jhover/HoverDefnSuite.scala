@@ -15,7 +15,7 @@ class HoverDefnSuite extends BaseJavaHoverSuite {
       |}
       |""".stripMargin,
     """
-      |int
+      |public static int NUMBER
       |""".stripMargin.javaHover,
   )
 
@@ -31,7 +31,7 @@ class HoverDefnSuite extends BaseJavaHoverSuite {
       |  }
       |}
       |""".stripMargin,
-    """|java.util.List<java.lang.Integer>
+    """|java.util.List<java.lang.Integer> x
        |""".stripMargin.javaHover,
   )
 
@@ -46,7 +46,7 @@ class HoverDefnSuite extends BaseJavaHoverSuite {
       |  }
       |}
       |""".stripMargin,
-    """|java.util.List<java.lang.Integer>
+    """|java.util.List<java.lang.Integer> x
        |""".stripMargin.javaHover,
   )
 

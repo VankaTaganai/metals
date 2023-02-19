@@ -14,7 +14,7 @@ import javax.lang.model.`type`.{
   TypeVisitor,
   UnionType,
   UnknownTypeException,
-  WildcardType
+  WildcardType,
 }
 import scala.jdk.CollectionConverters._
 

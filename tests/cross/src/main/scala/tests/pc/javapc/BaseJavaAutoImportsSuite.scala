@@ -1,15 +1,12 @@
 package tests.pc.javapc
 
 import munit.Location
-import tests.BuildInfoVersions
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 import scala.jdk.CollectionConverters.CollectionHasAsScala
-import scala.meta.dialects
 import scala.meta.internal.metals.CompilerOffsetParams
 import scala.meta.pc.AutoImportsResult
-import scala.util.control.NonFatal
 
 trait BaseJavaAutoImportsSuite extends BaseJavaPCSuite {
   val isExtensionMethods: Boolean = false
@@ -18,7 +15,6 @@ trait BaseJavaAutoImportsSuite extends BaseJavaPCSuite {
       name: String,
       original: String,
       expected: String,
-      compat: Map[String, String] = Map.empty,
   )(implicit loc: Location): Unit =
     test(name) {
       val imports = getAutoImports(original, "A.scala")

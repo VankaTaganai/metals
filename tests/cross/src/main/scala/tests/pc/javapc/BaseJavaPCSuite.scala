@@ -20,7 +20,7 @@ import scala.meta.internal.metals.{
   PackageIndex,
 }
 import scala.meta.internal.pc.PresentationCompilerConfigImpl
-import scala.meta.internal.pc.javapc.JavaPresentationCompiler
+import scala.meta.internal.pc.JavaPresentationCompiler
 import scala.meta.io.AbsolutePath
 import scala.meta.pc.PresentationCompiler
 import scala.util.control.NonFatal

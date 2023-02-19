@@ -12,7 +12,7 @@ import scala.jdk.CollectionConverters.SeqHasAsJava
 
 final class JavaAutoImportsProvider(
     compiler: JavaMetalsGlobal,
-    params: OffsetParams
+    params: OffsetParams,
 ) {
   def autoImports(): List[AutoImportsResult] = {
     val task: JavacTask = compiler.compilationTask(params.text())
@@ -37,7 +37,7 @@ final class JavaAutoImportsProvider(
 
           AutoImportsResultImpl(
             qName,
-            (new TextEdit(editPosition, s"import $qName") :: Nil).asJava
+            (new TextEdit(editPosition, s"import $qName") :: Nil).asJava,
           )
       }
 
@@ -46,7 +46,7 @@ final class JavaAutoImportsProvider(
 
   def autoImportPosition(
       params: OffsetParams,
-      scanner: JavaTreeScanner
+      scanner: JavaTreeScanner,
   ): Option[AutoImportPosition] = {
     for {
       pkg <- scanner.lastVisitedPackageTrees.headOption
@@ -54,7 +54,7 @@ final class JavaAutoImportsProvider(
       new AutoImportPosition(
         scanner.getEndPosition(pkg).toInt,
         params.text(),
-        true
+        true,
       )
     }
   }

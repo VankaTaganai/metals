@@ -15,7 +15,6 @@ class BaseJavaHoverSuite extends BaseJavaPCSuite with TestHovers { // todo: Gene
       expected: String,
       includeRange: Boolean = false,
       automaticPackage: Boolean = true,
-      compat: Map[String, String] = Map.empty,
   )(implicit loc: Location): Unit = {
     test(testOpt) {
       val filename = "Hover.java"

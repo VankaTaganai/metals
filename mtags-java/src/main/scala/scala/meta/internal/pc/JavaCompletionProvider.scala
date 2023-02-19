@@ -13,7 +13,7 @@ import javax.lang.model.element.TypeElement
 
 class JavaCompletionProvider(
     compiler: JavaMetalsGlobal,
-    params: OffsetParams
+    params: OffsetParams,
 ) {
 
   def completions(): CompletionList = {
@@ -35,7 +35,7 @@ class JavaCompletionProvider(
 
   private def completeMemberSelect(
       task: JavacTask,
-      path: TreePath
+      path: TreePath,
   ): CompletionList = {
     val typeAnalyzer = new JavaTypeAnalyzer(task)
     val select = path.getLeaf.asInstanceOf[MemberSelectTree]
@@ -51,7 +51,7 @@ class JavaCompletionProvider(
 
   private def completeDeclaredType(
       task: JavacTask,
-      declaredType: DeclaredType
+      declaredType: DeclaredType,
   ): CompletionList = {
     val members = task.getElements
       .getAllMembers(declaredType.asElement().asInstanceOf[TypeElement])
@@ -76,7 +76,7 @@ class JavaCompletionProvider(
 
   private def completeArrayType(
       task: JavacTask,
-      arrayType: ArrayType
+      arrayType: ArrayType,
   ): CompletionList = {
     new CompletionList(
       List(
@@ -89,7 +89,7 @@ class JavaCompletionProvider(
 
   private def completeTypeVariable(
       task: JavacTask,
-      typeVariable: TypeVariable
+      typeVariable: TypeVariable,
   ): CompletionList = {
     typeVariable.getUpperBound match {
       case dt: DeclaredType => completeDeclaredType(task, dt)

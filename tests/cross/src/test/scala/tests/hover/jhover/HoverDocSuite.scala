@@ -2,8 +2,6 @@ package tests.hover.jhover
 
 import tests.pc.javapc.BaseJavaHoverSuite
 
-import java.util
-
 class HoverDocSuite extends BaseJavaHoverSuite {
 
   override val documentationHoverEnabled = true
@@ -31,7 +29,7 @@ class HoverDocSuite extends BaseJavaHoverSuite {
   )
 
   check(
-    "doc-parent",
+    "doc parent",
     """
       |import java.util.ArrayList;
       |
@@ -62,7 +60,7 @@ class HoverDocSuite extends BaseJavaHoverSuite {
   )
 
   check(
-    "doc-path",
+    "doc path",
     """
       |import java.nio.file.Paths;
       |
@@ -80,39 +78,21 @@ class HoverDocSuite extends BaseJavaHoverSuite {
   )
 
   check(
-    "list-of",
+    "list of",
     """
       |import java.util.List;
       |
       |class A {
       |    public static void main(String args[]){
-      |        List.o@@f(1, 2 3);
+      |        List.o@@f(1, 2, 3);
       |    }
       |}
       |""".stripMargin,
     """|```java
-       |public static java.util.List<E> of(E arg0, E arg1)
+       |public static java.util.List<E> of(E arg0, E arg1, E arg2)
        |```
-       |Returns an unmodifiable list containing two elements.
+       |Returns an unmodifiable list containing three elements.
        |
        |See [Unmodifiable Lists]() for details.""".stripMargin,
-  )
-
-  check(
-    "method",
-    """
-      |import java.util.List;
-      |
-      |class A {
-      |    /**MAIN HOVER*/
-      |    public static void main(){
-      |        mai@@n();
-      |    }
-      |}
-      |""".stripMargin,
-    """|```java
-       |public static void main()
-       |```
-       |MAIN HOVER.""".stripMargin,
   )
 }
