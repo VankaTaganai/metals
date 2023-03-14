@@ -3,6 +3,8 @@ package scala.meta.internal.pc
 import javax.lang.model.`type`.ArrayType
 import javax.lang.model.`type`.DeclaredType
 import javax.lang.model.`type`.TypeVariable
+import javax.lang.model.element.Element
+import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
 
 import scala.annotation.tailrec
@@ -19,6 +21,7 @@ import com.sun.source.util.JavacTask
 import com.sun.source.util.TreePath
 import com.sun.source.util.Trees
 import org.eclipse.lsp4j.CompletionItem
+import org.eclipse.lsp4j.CompletionItemKind
 import org.eclipse.lsp4j.CompletionList
 
 class JavaCompletionProvider(
@@ -88,7 +91,7 @@ class JavaCompletionProvider(
     val identifier = extractIdentifier
 
     scopeCompletion
-      .map(element => new CompletionItem(element.getSimpleName.toString))
+      .map(completionItem)
       .filter(item => CompletionFuzzy.matches(identifier, item.getLabel))
   }
 
@@ -117,14 +120,11 @@ class JavaCompletionProvider(
 
     val completionItems = members
       .filter(member => CompletionFuzzy.matches(identifier, member.getSimpleName.toString))
-      .map { member =>
-        new CompletionItem(
-          member.getSimpleName.toString
-        )
-      }
+      .map(completionItem)
 
     new CompletionList(completionItems.asJava)
   }
+
 
   private def extractIdentifier: String = {
     val start = inferIdentStart(params.offset(), params.text())
@@ -147,7 +147,12 @@ class JavaCompletionProvider(
           case keyword
               if keyword.level == level && CompletionFuzzy.matches(identifier, keyword.name) => keyword.name
         }
-        .map(new CompletionItem(_))
+        .map { keyword =>
+          val item = new CompletionItem(keyword)
+          item.setKind(CompletionItemKind.Keyword)
+
+          item
+        }
 
     new CompletionList(completionItems.asJava)
   }
@@ -169,12 +174,11 @@ class JavaCompletionProvider(
       task: JavacTask,
       arrayType: ArrayType,
   ): CompletionList = {
+    val item = new CompletionItem("length")
+    item.setKind(CompletionItemKind.Keyword)
+
     new CompletionList(
-      List(
-        new CompletionItem(
-          "length"
-        )
-      ).asJava
+      List(item).asJava
     )
   }
 
@@ -196,6 +200,36 @@ class JavaCompletionProvider(
       i -= 1
     }
     i + 1
+  }
+
+  private def completionItem(element: Element): CompletionItem = {
+    val item = new CompletionItem(
+      element.getSimpleName.toString
+    )
+
+    val kind = completionKind(element.getKind)
+    kind.foreach(item.setKind)
+
+    item
+  }
+
+  private def completionKind(k: ElementKind): Option[CompletionItemKind] = {
+    println("EL KIND: " + k)
+    k match {
+      case ElementKind.CLASS => Some(CompletionItemKind.Class)
+      case ElementKind.ENUM => Some(CompletionItemKind.Enum)
+      case ElementKind.ANNOTATION_TYPE => Some(CompletionItemKind.Interface)
+      case ElementKind.INTERFACE => Some(CompletionItemKind.Interface)
+      case ElementKind.CONSTRUCTOR => Some(CompletionItemKind.Constructor)
+      case ElementKind.TYPE_PARAMETER => Some(CompletionItemKind.TypeParameter)
+      case ElementKind.FIELD => Some(CompletionItemKind.Field)
+      case ElementKind.PACKAGE => Some(CompletionItemKind.Module)
+      case ElementKind.LOCAL_VARIABLE => Some(CompletionItemKind.Variable)
+      case ElementKind.RESOURCE_VARIABLE => Some(CompletionItemKind.Variable)
+      case ElementKind.PARAMETER => Some(CompletionItemKind.Property)
+      case ElementKind.METHOD => Some(CompletionItemKind.Method)
+      case _ => None
+    }
   }
 
 }
