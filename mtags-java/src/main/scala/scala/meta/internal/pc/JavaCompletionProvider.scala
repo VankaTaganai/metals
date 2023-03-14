@@ -46,7 +46,9 @@ class JavaCompletionProvider(
           }
 
         val keywordsCompletion = keywords(n)
-        println("keywordsCompletion: " + keywordsCompletion.getItems.asScala.length)
+        println(
+          "keywordsCompletion: " + keywordsCompletion.getItems.asScala.length
+        )
         println("list: " + list.getItems.asScala.length)
         val resultList =
           (list.getItems.asScala ++ keywordsCompletion.getItems.asScala).asJava
@@ -119,12 +121,13 @@ class JavaCompletionProvider(
     val identifier = extractIdentifier
 
     val completionItems = members
-      .filter(member => CompletionFuzzy.matches(identifier, member.getSimpleName.toString))
+      .filter(member =>
+        CompletionFuzzy.matches(identifier, member.getSimpleName.toString)
+      )
       .map(completionItem)
 
     new CompletionList(completionItems.asJava)
   }
-
 
   private def extractIdentifier: String = {
     val start = inferIdentStart(params.offset(), params.text())
@@ -145,7 +148,11 @@ class JavaCompletionProvider(
       JavaKeyword.all
         .collect {
           case keyword
-              if keyword.level == level && CompletionFuzzy.matches(identifier, keyword.name) => keyword.name
+              if keyword.level == level && CompletionFuzzy.matches(
+                identifier,
+                keyword.name,
+              ) =>
+            keyword.name
         }
         .map { keyword =>
           val item = new CompletionItem(keyword)

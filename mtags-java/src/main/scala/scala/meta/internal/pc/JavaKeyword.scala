@@ -24,10 +24,10 @@ object JavaKeyword {
   ).map(JavaKeyword(_, ClassLevel))
 
   val methodLevelKeywords: List[JavaKeyword] = List(
-    "new", "assert", "try", "catch", "finally", "throw",
-    "return", "break", "case", "continue", "default", "do", "while", "for",
-    "switch", "if", "else", "instanceof", "var", "final", "class", "void",
-    "boolean", "int", "long", "float", "double",
+    "new", "assert", "try", "catch", "finally", "throw", "return", "break",
+    "case", "continue", "default", "do", "while", "for", "switch", "if", "else",
+    "instanceof", "var", "final", "class", "void", "boolean", "int", "long",
+    "float", "double",
   ).map(JavaKeyword(_, MethodLevel))
 
   val all: List[JavaKeyword] =
