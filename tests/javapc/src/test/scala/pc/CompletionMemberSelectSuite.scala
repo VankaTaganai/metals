@@ -24,7 +24,7 @@ class CompletionMemberSelectSuite extends BaseJavaCompletionSuite {
     """
       |class Simple{
       |    public static void main(String args[]){
-      |        new int[42].@@
+      |        new int[42].le@@
       |    }
       |}
       |""".stripMargin,

@@ -1,21 +1,25 @@
 package scala.meta.internal.pc
 
-import com.sun.source.tree.{
-  ClassTree,
-  CompilationUnitTree,
-  MemberSelectTree,
-  MethodTree,
-}
-import com.sun.source.util.{JavacTask, TreePath, Trees}
-import org.eclipse.lsp4j.{CompletionItem, CompletionList}
-
-import scala.jdk.CollectionConverters._
-import scala.meta.pc.OffsetParams
-import com.sun.source.tree.Tree.Kind._
-
-import javax.lang.model.`type`.{ArrayType, DeclaredType, TypeVariable}
+import javax.lang.model.`type`.ArrayType
+import javax.lang.model.`type`.DeclaredType
+import javax.lang.model.`type`.TypeVariable
 import javax.lang.model.element.TypeElement
+
 import scala.annotation.tailrec
+import scala.jdk.CollectionConverters._
+
+import scala.meta.pc.OffsetParams
+
+import com.sun.source.tree.ClassTree
+import com.sun.source.tree.CompilationUnitTree
+import com.sun.source.tree.MemberSelectTree
+import com.sun.source.tree.MethodTree
+import com.sun.source.tree.Tree.Kind._
+import com.sun.source.util.JavacTask
+import com.sun.source.util.TreePath
+import com.sun.source.util.Trees
+import org.eclipse.lsp4j.CompletionItem
+import org.eclipse.lsp4j.CompletionList
 
 class JavaCompletionProvider(
     compiler: JavaMetalsGlobal,
@@ -39,6 +43,8 @@ class JavaCompletionProvider(
           }
 
         val keywordsCompletion = keywords(n)
+        println("keywordsCompletion: " + keywordsCompletion.getItems.asScala.length)
+        println("list: " + list.getItems.asScala.length)
         val resultList =
           (list.getItems.asScala ++ keywordsCompletion.getItems.asScala).asJava
 
@@ -83,7 +89,7 @@ class JavaCompletionProvider(
 
     scopeCompletion
       .map(element => new CompletionItem(element.getSimpleName.toString))
-      .filter(_.getLabel.startsWith(identifier))
+      .filter(item => CompletionFuzzy.matches(identifier, item.getLabel))
   }
 
 //  private def completeClassnames(
@@ -110,7 +116,7 @@ class JavaCompletionProvider(
     val identifier = extractIdentifier
 
     val completionItems = members
-      .filter(member => member.getSimpleName.toString.startsWith(identifier))
+      .filter(member => CompletionFuzzy.matches(identifier, member.getSimpleName.toString))
       .map { member =>
         new CompletionItem(
           member.getSimpleName.toString
@@ -139,10 +145,7 @@ class JavaCompletionProvider(
       JavaKeyword.all
         .collect {
           case keyword
-              if keyword.level == level && keyword.name.startsWith(
-                identifier
-              ) =>
-            keyword.name
+              if keyword.level == level && CompletionFuzzy.matches(identifier, keyword.name) => keyword.name
         }
         .map(new CompletionItem(_))
 

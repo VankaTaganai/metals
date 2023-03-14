@@ -1,12 +1,15 @@
 package tests.pc
 
+import java.nio.file.Paths
+
+import scala.jdk.CollectionConverters._
+
+import scala.meta.internal.metals.CompilerOffsetParams
+import scala.meta.internal.metals.EmptyCancelToken
+import scala.meta.pc.CancelToken
+
 import munit.TestOptions
 import org.eclipse.lsp4j.CompletionItem
-
-import java.nio.file.Paths
-import scala.jdk.CollectionConverters._
-import scala.meta.internal.metals.{CompilerOffsetParams, EmptyCancelToken}
-import scala.meta.pc.CancelToken
 
 class BaseJavaCompletionSuite extends BaseJavaPCSuite {
   def check(

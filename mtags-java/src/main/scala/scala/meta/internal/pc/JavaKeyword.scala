@@ -24,7 +24,7 @@ object JavaKeyword {
   ).map(JavaKeyword(_, ClassLevel))
 
   val methodLevelKeywords: List[JavaKeyword] = List(
-    "super", "this", "new", "assert", "try", "catch", "finally", "throw",
+    "new", "assert", "try", "catch", "finally", "throw",
     "return", "break", "case", "continue", "default", "do", "while", "for",
     "switch", "if", "else", "instanceof", "var", "final", "class", "void",
     "boolean", "int", "long", "float", "double",

@@ -276,6 +276,7 @@ lazy val mtagsCoreSettings = List(
   libraryDependencies ++= Seq(
     "com.lihaoyi" %% "geny" % V.genyVersion
   ),
+  libraryDependencies ++= List("org.lz4" % "lz4-java" % "1.8.0"),
   libraryDependencies ++= crossSetting(
     scalaVersion.value,
     if2 = List(

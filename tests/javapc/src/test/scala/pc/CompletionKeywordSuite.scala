@@ -23,6 +23,25 @@ class CompletionKeywordSuite extends BaseJavaCompletionSuite {
   )
 
   check(
+    "this",
+    """
+      |
+      |interface A {}
+      |
+      |class B implements A {
+      |
+      |    public static int foo() {
+      |         thi@@
+      |    }
+      |
+      |}
+      |""".stripMargin,
+    """
+      |this
+      |""".stripMargin,
+  )
+
+  check(
     "package",
     """
       |pac@@

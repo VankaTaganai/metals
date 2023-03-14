@@ -44,8 +44,8 @@ import scala.collection.mutable
 object Fuzzy extends Fuzzy
 class Fuzzy {
   private class Delimiter(
-      val isFinished: Boolean,
-      val idx: Int
+    val isFinished: Boolean,
+    val idx: Int
   )
 
   /**
@@ -57,9 +57,9 @@ class Fuzzy {
    *                  use 0. Use 1 to let the query "m.Pos" match "scala/meta/Position#Range."
    */
   def matches(
-      query: CharSequence,
-      symbol: CharSequence,
-      skipNames: Int = 0
+    query: CharSequence,
+    symbol: CharSequence,
+    skipNames: Int = 0
   ): Boolean = {
     val li = lastIndex(symbol)
     // Loops through all names in the query/symbol strings in reverse order (last names first)
@@ -107,10 +107,10 @@ class Fuzzy {
   }
 
   private def exactMatch(
-      query: CharSequence,
-      symbol: CharSequence,
-      sa: Int,
-      sb: Int
+    query: CharSequence,
+    symbol: CharSequence,
+    sa: Int,
+    sb: Int
   ): Boolean = {
     if (query.length == sb - sa) {
       var idx = 0
@@ -136,8 +136,8 @@ class Fuzzy {
 
   private def lastIndex(symbol: CharSequence): Int = {
     var end = symbol.length() - (if (endsWith(symbol, ".class"))
-                                   ".class".length
-                                 else 1)
+      ".class".length
+    else 1)
     while (end >= 0 && isDelimiter(symbol.charAt(end))) {
       end -= 1
     }
@@ -184,8 +184,8 @@ class Fuzzy {
   }
 
   private def lastDelimiter(
-      string: CharSequence,
-      fromIndex: Int
+    string: CharSequence,
+    fromIndex: Int
   ): Delimiter = {
     var curr = fromIndex - 2
     var continue = true
@@ -203,12 +203,12 @@ class Fuzzy {
   // Compares two names like query "InStr" and "InputFileStream".
   // The substring are guaranteed to not have delimiters.
   private def matchesName(
-      query: CharSequence,
-      qa: Int,
-      qb: Int,
-      symbol: CharSequence,
-      sa: Int,
-      sb: Int
+    query: CharSequence,
+    qa: Int,
+    qb: Int,
+    symbol: CharSequence,
+    sa: Int,
+    sb: Int
   ): Boolean = {
     // @param ql the last index in query at which qa.isUpper && charAt(qa) == charAt(sa)
     // @param sl the last index in symbol at which qa.isUpper && charAt(qa) == charAt(sa)
@@ -250,7 +250,7 @@ class Fuzzy {
   }
 
   def bloomFilterSymbolStrings(
-      symbols: Iterable[String]
+    symbols: Iterable[String]
   ): StringBloomFilter = {
     val estimatedSize = symbols.foldLeft(0) { case (accum, string) =>
       val redundantSuffix =
@@ -285,8 +285,8 @@ class Fuzzy {
    * @param symbols all symbols in a source file or a package.
    */
   def bloomFilterSymbolStrings(
-      symbol: String,
-      hasher: StringBloomFilter
+    symbol: String,
+    hasher: StringBloomFilter
   ): Unit = {
     if (symbol.endsWith("$sp.class")) return
     hasher.reset()
@@ -315,8 +315,8 @@ class Fuzzy {
     val lastName = new ZeroCopySubSequence(symbol, symbolicDelimiter, N)
     if (
       !symbol.endsWith("/") &&
-      !isAllNumeric(lastName) &&
-      lastName.length() < ExactSearchLimit
+        !isAllNumeric(lastName) &&
+        lastName.length() < ExactSearchLimit
     ) {
       hasher.putCharSequence(ExactCharSequence(lastName))
     }
@@ -327,8 +327,8 @@ class Fuzzy {
   }
 
   def bloomFilterSymbolStrings(
-      symbols: Iterable[String],
-      hasher: StringBloomFilter
+    symbols: Iterable[String],
+    hasher: StringBloomFilter
   ): Unit = {
     symbols.foreach(sym => bloomFilterSymbolStrings(sym, hasher))
   }
@@ -358,8 +358,8 @@ class Fuzzy {
    * Companion to `bloomFilterSymbolStrings`.
    */
   def bloomFilterQueryStrings(
-      query: String,
-      includeTrigrams: Boolean = true
+    query: String,
+    includeTrigrams: Boolean = true
   ): Iterable[CharSequence] = {
     if (query.length < ExactSearchLimit) {
       List(ExactCharSequence(query))

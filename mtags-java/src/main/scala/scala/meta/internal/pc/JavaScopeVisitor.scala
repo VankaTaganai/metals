@@ -1,13 +1,13 @@
 package scala.meta.internal.pc
 
-import com.sun.source.util.{JavacTask, TreePath}
-import com.sun.source.tree.Scope
-
-import javax.lang.model.`type`.DeclaredType
 import javax.lang.model.element.Element
 import javax.lang.model.util.Elements
+
 import scala.annotation.tailrec
 import scala.jdk.CollectionConverters.IterableHasAsScala
+
+import com.sun.source.tree.Scope
+import com.sun.source.util.JavacTask
 
 object JavaScopeVisitor {
 
