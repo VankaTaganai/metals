@@ -374,6 +374,10 @@ lazy val mtags = project
   .dependsOn(mtagsShared)
   .enablePlugins(BuildInfoPlugin)
 
+lazy val `mtags-java` = project
+  .configure(JavaPcSettings.settings(sharedSettings))
+  .dependsOn(interfaces, mtagsShared)
+
 lazy val metals = project
   .settings(
     sharedSettings,
@@ -660,7 +664,7 @@ lazy val javapc = project
     testSettings,
     sharedSettings,
   )
-  .dependsOn(mtest, mtagsShared)
+  .dependsOn(mtest, `mtags-java`)
 
 def isInTestShard(name: String, logger: Logger): Boolean = {
   val groupIndex = TestGroups.testGroups.indexWhere(group => group(name))
