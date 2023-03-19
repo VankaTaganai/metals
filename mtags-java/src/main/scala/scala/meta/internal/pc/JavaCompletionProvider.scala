@@ -51,11 +51,32 @@ class JavaCompletionProvider(
         )
         println("list: " + list.getItems.asScala.length)
         val resultList =
-          (list.getItems.asScala ++ keywordsCompletion.getItems.asScala).asJava
+          (list.getItems.asScala ++ keywordsCompletion.getItems.asScala)
+            .sorted(ordering)
+            .asJava
 
         new CompletionList(resultList)
       case None => new CompletionList()
     }
+  }
+
+  private def ordering: Ordering[CompletionItem] = {
+    val identifier = extractIdentifier.toLowerCase
+
+    new Ordering[CompletionItem] {
+      def score(item: CompletionItem): Int = {
+        val name = item.getLabel.toLowerCase
+
+        if (name.startsWith(identifier)) 0
+        else if (name.contains(identifier)) 1
+        else 2
+      }
+
+      override def compare(i1: CompletionItem, i2: CompletionItem): Int = {
+        java.lang.Integer.compare(score(i1), score(i2))
+      }
+    }
+
   }
 
   private def completeMemberSelect(
@@ -221,7 +242,7 @@ class JavaCompletionProvider(
   }
 
   private def completionKind(k: ElementKind): Option[CompletionItemKind] = {
-    println("EL KIND: " + k)
+//    println("EL KIND: " + k)
     k match {
       case ElementKind.CLASS => Some(CompletionItemKind.Class)
       case ElementKind.ENUM => Some(CompletionItemKind.Enum)

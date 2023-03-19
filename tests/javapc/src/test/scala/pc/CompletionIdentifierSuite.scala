@@ -107,10 +107,10 @@ class CompletionIdentifierSuite extends BaseJavaCompletionSuite {
       |}
       |""".stripMargin,
     """
-      |TooManyListenersException
       |ListResourceBundle
       |ListIterator
       |List
+      |TooManyListenersException
       |LinkedList
       |EventListenerProxy
       |EventListener
