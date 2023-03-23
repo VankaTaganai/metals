@@ -51,7 +51,7 @@ class JavaCompletionProvider(
         )
         println("list: " + list.getItems.asScala.length)
         val resultList =
-          (list.getItems.asScala ++ keywordsCompletion.getItems.asScala)
+          (list.getItems.asScala ++ keywordsCompletion.getItems.asScala).distinct
             .sorted(ordering)
             .asJava
 

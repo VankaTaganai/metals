@@ -25,7 +25,7 @@ object JavaScopeVisitor {
       curScope <- scopes
       member <- curScope.getLocalElements.asScala
       allClassMembers = classMembers(scope, elements)
-    } yield member :: allClassMembers).flatten.distinctBy(_.getSimpleName)
+    } yield member :: allClassMembers).flatten
   }
 
   private def classMembers(scope: Scope, elements: Elements): List[Element] = {

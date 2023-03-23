@@ -37,6 +37,7 @@ class CompletionIdentifierSuite extends BaseJavaCompletionSuite {
       |""".stripMargin,
     """
       |bar
+      |bar
       |""".stripMargin,
   )
 
@@ -117,6 +118,25 @@ class CompletionIdentifierSuite extends BaseJavaCompletionSuite {
       |ArrayList
       |AbstractSequentialList
       |AbstractList
+      |""".stripMargin,
+  )
+
+  check(
+    "duplicate names",
+    """
+      |class A {
+      |
+      |   public static int duplicate = 42;
+      |
+      |    public static void duplicate(int bar) {
+      |         dup@@
+      |    }
+      |
+      |}
+      |""".stripMargin,
+    """
+      |duplicate
+      |duplicate
       |""".stripMargin,
   )
 }
