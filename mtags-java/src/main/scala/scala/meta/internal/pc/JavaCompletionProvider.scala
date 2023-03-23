@@ -3,15 +3,16 @@ package scala.meta.internal.pc
 import javax.lang.model.`type`.ArrayType
 import javax.lang.model.`type`.DeclaredType
 import javax.lang.model.`type`.TypeVariable
-import javax.lang.model.element.Element
-import javax.lang.model.element.ElementKind
-import javax.lang.model.element.TypeElement
-
+import javax.lang.model.element.{
+  Element,
+  ElementKind,
+  ExecutableElement,
+  TypeElement,
+  VariableElement,
+}
 import scala.annotation.tailrec
 import scala.jdk.CollectionConverters._
-
 import scala.meta.pc.OffsetParams
-
 import com.sun.source.tree.ClassTree
 import com.sun.source.tree.CompilationUnitTree
 import com.sun.source.tree.MemberSelectTree
@@ -231,12 +232,24 @@ class JavaCompletionProvider(
   }
 
   private def completionItem(element: Element): CompletionItem = {
-    val item = new CompletionItem(
-      element.getSimpleName.toString
-    )
+    val label = element match {
+      case e: ExecutableElement => JavaLabels.executableLabel(e)
+      case _ => element.getSimpleName.toString
+    }
+
+    val item = new CompletionItem(label)
 
     val kind = completionKind(element.getKind)
     kind.foreach(item.setKind)
+
+    val detail = element match {
+      case v: VariableElement => JavaLabels.typeLabel(v.asType())
+      case e: ExecutableElement => JavaLabels.typeLabel(e.asType())
+      case t: TypeElement => JavaLabels.typeLabel(t.asType())
+      case _ => ""
+    }
+
+    item.setDetail(detail)
 
     item
   }
