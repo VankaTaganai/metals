@@ -235,7 +235,8 @@ class JavaCompletionProvider(
     val simpleName = element.getSimpleName.toString
 
     val (label, insertText) = element match {
-      case e: ExecutableElement => (JavaLabels.executableLabel(e), s"$simpleName()")
+      case e: ExecutableElement =>
+        (JavaLabels.executableLabel(e), s"$simpleName()")
       case _ => (simpleName, simpleName)
     }
 
