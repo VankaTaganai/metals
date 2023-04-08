@@ -37,7 +37,7 @@ class CompletionIdentifierSuite extends BaseJavaCompletionSuite {
       |""".stripMargin,
     """
       |bar
-      |bar
+      |bar()
       |""".stripMargin,
   )
 
@@ -136,7 +136,7 @@ class CompletionIdentifierSuite extends BaseJavaCompletionSuite {
       |""".stripMargin,
     """
       |duplicate
-      |duplicate
+      |duplicate(int bar)
       |""".stripMargin,
   )
 }
