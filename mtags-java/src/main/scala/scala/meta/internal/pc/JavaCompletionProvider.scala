@@ -47,10 +47,6 @@ class JavaCompletionProvider(
           }
 
         val keywordsCompletion = keywords(n)
-        println(
-          "keywordsCompletion: " + keywordsCompletion.getItems.asScala.length
-        )
-        println("list: " + list.getItems.asScala.length)
         val resultList =
           (list.getItems.asScala ++ keywordsCompletion.getItems.asScala).distinct
             .sorted(ordering)
@@ -100,7 +96,6 @@ class JavaCompletionProvider(
       task: JavacTask,
       path: TreePath,
   ): CompletionList = {
-    println("ident")
     new CompletionList(completeFromScope(task, path).asJava)
   }
 
@@ -161,10 +156,6 @@ class JavaCompletionProvider(
   private def keywords(path: TreePath): CompletionList = {
     val identifier = extractIdentifier
     val level = keywordLevel(path)
-
-    println("KIND: " + path.getLeaf.getKind)
-    println("LEVEL: " + level)
-    println("IDENTIFIER: " + identifier)
 
     val completionItems =
       JavaKeyword.all
@@ -259,7 +250,6 @@ class JavaCompletionProvider(
   }
 
   private def completionKind(k: ElementKind): Option[CompletionItemKind] = {
-//    println("EL KIND: " + k)
     k match {
       case ElementKind.CLASS => Some(CompletionItemKind.Class)
       case ElementKind.ENUM => Some(CompletionItemKind.Enum)
