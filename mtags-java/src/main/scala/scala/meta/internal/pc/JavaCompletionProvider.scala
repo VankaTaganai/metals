@@ -232,12 +232,15 @@ class JavaCompletionProvider(
   }
 
   private def completionItem(element: Element): CompletionItem = {
-    val label = element match {
-      case e: ExecutableElement => JavaLabels.executableLabel(e)
-      case _ => element.getSimpleName.toString
+    val simpleName = element.getSimpleName.toString
+
+    val (label, insertText) = element match {
+      case e: ExecutableElement => (JavaLabels.executableLabel(e), s"$simpleName()")
+      case _ => (simpleName, simpleName)
     }
 
     val item = new CompletionItem(label)
+    item.setInsertText(insertText)
 
     val kind = completionKind(element.getKind)
     kind.foreach(item.setKind)
