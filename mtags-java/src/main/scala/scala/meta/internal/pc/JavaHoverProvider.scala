@@ -130,11 +130,12 @@ class JavaHoverProvider(
 
   private def executableHover(element: ExecutableElement): String = {
     val modifiers = modifiersHover(element)
-    val returnType = typeHover(element.asType())
-    val functionName =
+
+    val (returnType, functionName) =
       if (element.getKind == CONSTRUCTOR)
-        element.getEnclosingElement.getSimpleName
-      else element.getSimpleName
+        ("", element.getEnclosingElement.getSimpleName)
+      else (typeHover(element.asType()), element.getSimpleName)
+
     val arguments =
       element.getParameters.asScala.map(argumentHover).mkString(", ")
 
@@ -146,7 +147,10 @@ class JavaHoverProvider(
           .map(t => t.accept(new JavaTypeVisitor(), null))
           .mkString(" throws ", ", ", "")
 
-    s"$modifiers$returnType $functionName($arguments)$throwsHover"
+    s"$modifiers$returnType $functionName($arguments)$throwsHover".replaceAll(
+      " +",
+      " ",
+    )
   }
 
   private def packageHover(element: PackageElement): String =

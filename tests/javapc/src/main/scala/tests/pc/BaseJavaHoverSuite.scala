@@ -11,7 +11,7 @@ import munit.TestOptions
 import tests.TestHovers
 import java.net.URI
 
-class BaseJavaHoverSuite extends BaseJavaPCSuite with TestHovers { // todo: General Logic
+class BaseJavaHoverSuite extends BaseJavaPCSuite with TestHovers {
 
   def check(
       testOpt: TestOptions,

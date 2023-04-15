@@ -16,7 +16,7 @@ class HoverTermSuite extends BaseJavaHoverSuite {
       |}
       |""".stripMargin,
     """
-      |private void A(java.lang.String str, int num)
+      |private A(java.lang.String str, int num)
       |""".stripMargin.javaHover,
   )
 
@@ -33,7 +33,7 @@ class HoverTermSuite extends BaseJavaHoverSuite {
       |}
       |""".stripMargin,
     """
-      |private void A(java.lang.String str, T t)
+      |private A(java.lang.String str, T t)
       |""".stripMargin.javaHover,
   )
 
