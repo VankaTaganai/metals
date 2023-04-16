@@ -254,6 +254,10 @@ lazy val mtagsShared = project
       V.supportedScalaVersions ++ V.nightlyScala3Versions
     },
     crossVersion := CrossVersion.binary,
+    Compile / unmanagedSourceDirectories ++= multiScalaDirectories(
+      (ThisBuild / baseDirectory).value / "mtags-shared",
+      scalaVersion.value,
+    ),
     Compile / packageSrc / publishArtifact := true,
     libraryDependencies ++= List(
       "org.lz4" % "lz4-java" % "1.8.0",
@@ -379,6 +383,7 @@ lazy val mtags3 = project
     sharedSettings,
     mtagsSettings,
     Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "mtags" / "src" / "main" / "scala",
+    Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "mtags-shared" / "src" / "main" / "scala",
     moduleName := "mtags3",
     scalaVersion := V.scala3,
     target := (ThisBuild / baseDirectory).value / "mtags" / "target" / "target3",
