@@ -1,35 +1,24 @@
 package scala.meta.internal.mtags
 
+import geny.Generator
+import org.eclipse.{lsp4j => l}
+
 import java.net.URI
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
-import java.nio.file.StandardOpenOption
+import java.nio.file._
 import java.util.PriorityQueue
 import java.util.logging.Logger
-
 import scala.annotation.tailrec
 import scala.collection.AbstractIterator
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-import scala.util.control.NonFatal
-import scala.{meta => m}
-
-import scala.meta.inputs.Input
-import scala.meta.inputs.Position
-import scala.meta.internal.io.FileIO
-import scala.meta.internal.io.PathIO
+import scala.meta.inputs.{Input, Position}
+import scala.meta.internal.io.{FileIO, PathIO}
 import scala.meta.internal.semanticdb.Language
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.{semanticdb => s}
-import scala.meta.io.AbsolutePath
-import scala.meta.io.RelativePath
-
-import geny.Generator
-import org.eclipse.{lsp4j => l}
+import scala.meta.io.{AbsolutePath, RelativePath}
+import scala.util.{Failure, Success, Try}
+import scala.util.control.NonFatal
+import scala.{meta => m}
 
 object ScalametaCommonEnrichments extends ScalametaCommonEnrichments {}
 trait ScalametaCommonEnrichments extends CommonMtagsEnrichments {

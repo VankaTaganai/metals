@@ -104,6 +104,7 @@ def configureMtagsScalaVersionDynamically(
     List(
       mtest / scalaVersion := scalaV,
       mtags / scalaVersion := scalaV,
+      mtagsShared / scalaVersion := scalaV,
       cross / scalaVersion := scalaV,
     )
   val extracted = Project.extract(state)
@@ -253,10 +254,38 @@ lazy val mtagsShared = project
       V.supportedScalaVersions ++ V.nightlyScala3Versions
     },
     crossVersion := CrossVersion.binary,
+    Compile / unmanagedSourceDirectories ++= multiScalaDirectories(
+      (ThisBuild / baseDirectory).value / "mtags-shared",
+      scalaVersion.value,
+    ),
     Compile / packageSrc / publishArtifact := true,
     libraryDependencies ++= List(
       "org.lz4" % "lz4-java" % "1.8.0",
       "io.get-coursier" % "interface" % V.coursierInterfaces,
+      "com.lihaoyi" %% "geny" % V.genyVersion,
+    ),
+    libraryDependencies ++= crossSetting(
+      scalaVersion.value,
+      if2 = List(
+        // for token edit-distance used by goto definition
+        "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0",
+        "org.scalameta" % "semanticdb-scalac-core" % V.scalameta cross CrossVersion.full,
+      ),
+      if3 = List(
+        "org.scala-lang" %% "scala3-compiler" % scalaVersion.value,
+        ("org.scalameta" %% "scalameta" % V.scalameta)
+          .cross(CrossVersion.for3Use2_13)
+          .exclude("org.scala-lang", "scala-reflect")
+          .exclude("org.scala-lang", "scala-compiler")
+          .exclude(
+            "com.lihaoyi",
+            "geny_2.13",
+          ) // avoid 2.13 and 3 on the classpath since we rely on it directly
+          .exclude(
+            "com.lihaoyi",
+            "sourcecode_2.13",
+          ), // avoid 2.13 and 3 on the classpath since it comes in via pprint
+      ),
     ),
   )
   .dependsOn(interfaces)
@@ -354,6 +383,7 @@ lazy val mtags3 = project
     sharedSettings,
     mtagsSettings,
     Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "mtags" / "src" / "main" / "scala",
+    Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "mtags-shared" / "src" / "main" / "scala",
     moduleName := "mtags3",
     scalaVersion := V.scala3,
     target := (ThisBuild / baseDirectory).value / "mtags" / "target" / "target3",
@@ -362,7 +392,7 @@ lazy val mtags3 = project
       (ThisBuild / baseDirectory).value / ".scalafix3.conf"
     ),
   )
-  .dependsOn(mtagsShared)
+  .dependsOn(interfaces)
   .enablePlugins(BuildInfoPlugin)
 
 lazy val mtags = project
@@ -373,6 +403,10 @@ lazy val mtags = project
   )
   .dependsOn(mtagsShared)
   .enablePlugins(BuildInfoPlugin)
+
+lazy val `mtags-java` = project
+  .configure(JavaPcSettings.settings(sharedSettings))
+  .dependsOn(interfaces, mtagsShared)
 
 lazy val metals = project
   .settings(
@@ -495,7 +529,7 @@ lazy val metals = project
       "scala3" -> V.scala3,
     ),
   )
-  .dependsOn(mtags)
+  .dependsOn(mtags, `mtags-java`)
   .enablePlugins(BuildInfoPlugin)
 
 lazy val `sbt-metals` = project
@@ -609,7 +643,9 @@ def publishAllMtags(
 def publishBinaryMtags =
   (interfaces / publishLocal)
     .dependsOn(
-      publishAllMtags(V.quickPublishScalaVersions)
+      mtagsShared / publishLocal,
+      `mtags-java` / publishLocal,
+      publishAllMtags(V.quickPublishScalaVersions),
     )
 
 lazy val mtest = project
@@ -652,6 +688,14 @@ lazy val cross = project
     crossScalaVersions := V.nonDeprecatedScalaVersions,
   )
   .dependsOn(mtest)
+
+lazy val javapc = project
+  .in(file("tests/javapc"))
+  .settings(
+    testSettings,
+    sharedSettings,
+  )
+  .dependsOn(mtest, `mtags-java`)
 
 def isInTestShard(name: String, logger: Logger): Boolean = {
   val groupIndex = TestGroups.testGroups.indexWhere(group => group(name))
