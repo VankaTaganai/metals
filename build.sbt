@@ -257,6 +257,7 @@ lazy val mtagsShared = project
     libraryDependencies ++= List(
       "org.lz4" % "lz4-java" % "1.8.0",
       "io.get-coursier" % "interface" % V.coursierInterfaces,
+      "com.lihaoyi" %% "geny" % V.genyVersion,
     ),
     libraryDependencies ++= crossSetting(
       scalaVersion.value,
