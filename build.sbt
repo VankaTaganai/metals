@@ -637,6 +637,7 @@ def publishAllMtags(
 def publishBinaryMtags =
   (interfaces / publishLocal)
     .dependsOn(
+      mtagsShared / publishLocal,
       `mtags-java` / publishLocal,
       publishAllMtags(V.quickPublishScalaVersions),
     )
