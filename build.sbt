@@ -258,6 +258,29 @@ lazy val mtagsShared = project
       "org.lz4" % "lz4-java" % "1.8.0",
       "io.get-coursier" % "interface" % V.coursierInterfaces,
     ),
+    libraryDependencies ++= crossSetting(
+      scalaVersion.value,
+      if2 = List(
+        // for token edit-distance used by goto definition
+        "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0",
+        "org.scalameta" % "semanticdb-scalac-core" % V.scalameta cross CrossVersion.full,
+      ),
+      if3 = List(
+        "org.scala-lang" %% "scala3-compiler" % scalaVersion.value,
+        ("org.scalameta" %% "scalameta" % V.scalameta)
+          .cross(CrossVersion.for3Use2_13)
+          .exclude("org.scala-lang", "scala-reflect")
+          .exclude("org.scala-lang", "scala-compiler")
+          .exclude(
+            "com.lihaoyi",
+            "geny_2.13",
+          ) // avoid 2.13 and 3 on the classpath since we rely on it directly
+          .exclude(
+            "com.lihaoyi",
+            "sourcecode_2.13",
+          ), // avoid 2.13 and 3 on the classpath since it comes in via pprint
+      ),
+    ),
   )
   .dependsOn(interfaces)
 
@@ -362,7 +385,7 @@ lazy val mtags3 = project
       (ThisBuild / baseDirectory).value / ".scalafix3.conf"
     ),
   )
-  .dependsOn(mtagsShared)
+  .dependsOn(interfaces)
   .enablePlugins(BuildInfoPlugin)
 
 lazy val mtags = project
