@@ -14,7 +14,7 @@ import java.net.URI
 
 class JavaMetalsGlobal(
     val search: SymbolSearch,
-    val metalsConfig: PresentationCompilerConfig,
+    val metalsConfig: PresentationCompilerConfig
 ) {
 
   private val COMPILER: JavaCompiler =
@@ -30,7 +30,7 @@ class JavaMetalsGlobal(
         null,
         null,
         null,
-        List(javaFileObject).asJava,
+        List(javaFileObject).asJava
       )
       .asInstanceOf[JavacTask]
   }
@@ -47,7 +47,7 @@ class JavaMetalsGlobal(
 
   def compilerTreeNode(
       scanner: JavaTreeScanner,
-      position: CursorPosition,
+      position: CursorPosition
   ): Option[TreePath] = {
     scanner.scan(scanner.root, position)
     lastVisitedParentTrees = scanner.lastVisitedParentTrees

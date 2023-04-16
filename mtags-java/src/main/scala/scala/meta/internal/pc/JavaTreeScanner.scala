@@ -19,14 +19,14 @@ import com.sun.source.util.Trees
 
 class JavaTreeScanner(
     task: JavacTask,
-    var root: CompilationUnitTree,
+    var root: CompilationUnitTree
 ) extends TreePathScanner[TreePath, CursorPosition] {
 
   var lastVisitedParentTrees: List[TreePath] = Nil
 
   override def visitCompilationUnit(
       t: CompilationUnitTree,
-      p: CursorPosition,
+      p: CursorPosition
   ): TreePath = {
     root = t
     reduce(super.visitCompilationUnit(t, p), getCurrentPath)
@@ -34,7 +34,7 @@ class JavaTreeScanner(
 
   override def visitIdentifier(
       node: IdentifierTree,
-      p: CursorPosition,
+      p: CursorPosition
   ): TreePath = {
     val pos = Trees.instance(task).getSourcePositions
     val start = pos.getStartPosition(root, node)
@@ -48,7 +48,7 @@ class JavaTreeScanner(
 
   override def visitMemberSelect(
       node: MemberSelectTree,
-      p: CursorPosition,
+      p: CursorPosition
   ): TreePath = {
     val pos = Trees.instance(task).getSourcePositions
     val start = pos.getEndPosition(root, node.getExpression) + 1
@@ -63,7 +63,7 @@ class JavaTreeScanner(
 
   override def visitMemberReference(
       node: MemberReferenceTree,
-      p: CursorPosition,
+      p: CursorPosition
   ): TreePath = {
     val pos = Trees.instance(task).getSourcePositions
     val start = pos.getEndPosition(root, node.getQualifierExpression) + 2
@@ -88,13 +88,13 @@ class JavaTreeScanner(
 
   override def visitErroneous(
       node: ErroneousTree,
-      p: CursorPosition,
+      p: CursorPosition
   ): TreePath =
     scan(node.getErrorTrees, p)
 
   override def visitVariable(
       node: VariableTree,
-      p: CursorPosition,
+      p: CursorPosition
   ): TreePath = {
     val pos = Trees.instance(task).getSourcePositions
     val start = pos.getStartPosition(root, node)
@@ -112,7 +112,7 @@ class JavaTreeScanner(
 
   override def visitNewClass(
       node: NewClassTree,
-      p: CursorPosition,
+      p: CursorPosition
   ): TreePath = {
     val pos = Trees.instance(task).getSourcePositions
     val start = pos.getStartPosition(root, node.getIdentifier)
@@ -141,7 +141,7 @@ class JavaTreeScanner(
   private def visitNode[N <: Tree](
       node: N,
       p: CursorPosition,
-      traverse: (N, CursorPosition) => TreePath,
+      traverse: (N, CursorPosition) => TreePath
   ): TreePath = {
     val pos = Trees.instance(task).getSourcePositions
     val start = pos.getStartPosition(root, node)

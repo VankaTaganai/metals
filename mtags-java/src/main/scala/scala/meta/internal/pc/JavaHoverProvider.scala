@@ -33,7 +33,7 @@ import com.sun.tools.javac.code.Type.ClassType
 
 class JavaHoverProvider(
     compiler: JavaMetalsGlobal,
-    params: OffsetParams,
+    params: OffsetParams
 ) {
 
   def hover(): Option[HoverSignature] = params match {
@@ -87,7 +87,7 @@ class JavaHoverProvider(
 
   private def modifiersHover(
       element: Element,
-      filter: Set[Modifier] = Set(),
+      filter: Set[Modifier] = Set()
   ): String = {
     val modifiers =
       element.getModifiers.asScala.filterNot(m => filter.contains(m))
@@ -149,7 +149,7 @@ class JavaHoverProvider(
 
     s"$modifiers$returnType $functionName($arguments)$throwsHover".replaceAll(
       " +",
-      " ",
+      " "
     )
   }
 
@@ -178,7 +178,7 @@ class JavaHoverProvider(
                 case cType: ClassType => overriddenSymbols(symbol, cType)
                 case _ => util.Collections.emptyList[String]
               }
-            },
+            }
           )
           .toScala
           .map(_.docstring())
@@ -189,7 +189,7 @@ class JavaHoverProvider(
 
   private def overriddenSymbols(
       symbol: Symbol,
-      cType: ClassType,
+      cType: ClassType
   ): util.List[String] = {
     val types = baseSymbols(cType)
 
